@@ -1,0 +1,69 @@
+name: Integration Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout integration test repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Checkout snarkOS repository
+        uses: actions/checkout@v5
+        with:
+          repository: provableHQ/snarkOS
+          path: snarkOS
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout SDK repository
+        uses: actions/checkout@v5
+        with:
+          repository: ProvableHQ/sdk
+          path: sdk
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Install snarkOS dependencies
+        run: |
+          cd snarkOS
+          cargo build --release
+
+      - name: Run snarkOS tests
+        run: |
+          cd snarkOS
+          cargo test --release
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: sdk/yarn.lock
+
+      - name: Install SDK dependencies
+        run: |
+          cd sdk
+          yarn install --frozen-lockfile
+
+      - name: Run SDK tests
+        run: |
+          cd sdk
+          yarn test
+
