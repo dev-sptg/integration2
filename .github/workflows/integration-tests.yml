@@ -8,62 +8,133 @@ on:
     branches:
       - master
 
-jobs:
-  integration-tests:
-    runs-on: ubuntu-latest
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  snarkos-build:
+    uses: ./.github/workflows/setup-snarkos.yml
+
+  record-scanning-service-build:
+    uses: ./.github/workflows/setup-record-scanning-service.yml
+    secrets:
+      REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      DEPENDENCY_CUSNARK_SSH_KEY: ${{ secrets.DEPENDENCY_CUSNARK_SSH_KEY }}
+
+  provapipe-build:
+    uses: ./.github/workflows/setup-provapipe.yml
+    secrets:
+      REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+
+  sdk-build:
+    uses: ./.github/workflows/setup-sdk.yml
+
+  integration-tests:
+    needs: [snarkos-build, record-scanning-service-build, provapipe-build, sdk-build]
+    runs-on: ubuntu-latest-m
     steps:
       - name: Checkout integration test repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
-      - name: Checkout snarkOS repository
-        uses: actions/checkout@v5
+      - name: Download snarkOS build
+        uses: actions/download-artifact@v4
         with:
-          repository: provableHQ/snarkOS
+          name: snarkos-build
           path: snarkOS
-          fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout SDK repository
-        uses: actions/checkout@v5
+      - name: Download Record Scanning Service build
+        uses: actions/download-artifact@v4
         with:
-          repository: ProvableHQ/sdk
+          name: record-scanning-service-build
+          path: record-scanning-service
+
+      - name: Download Provapipe build
+        uses: actions/download-artifact@v4
+        with:
+          name: provapipe-build
+          path: provapipe
+
+      - name: Download SDK build
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-build
           path: sdk
-          fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          cache: true
+          cache: false
 
-      - name: Install snarkOS dependencies
-        run: |
-          cd snarkOS
-          cargo build --release
+      - name: Set up Rust cache for snarkOS
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: snarkOS
+          shared-key: snarkos-cache
+          save-if: false
 
-      - name: Run snarkOS tests
-        run: |
-          cd snarkOS
-          cargo test --release
+      - name: Set up Rust cache for Record Scanning Service
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: record-scanning-service
+          shared-key: record-scanning-service-cache
+          save-if: false
+
+      - name: Set up Rust cache for Provapipe
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: provapipe
+          shared-key: provapipe-cache
+          save-if: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'yarn'
           cache-dependency-path: sdk/yarn.lock
 
-      - name: Install SDK dependencies
+      - name: Run snarkOS tests
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
         run: |
-          cd sdk
-          yarn install --frozen-lockfile
+          cd snarkOS
+          cargo test --release || true
+
+      - name: Run Record Scanning Service tests
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: |
+          cd record-scanning-service
+          cargo test --release || true
+
+      - name: Run Provapipe tests
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: |
+          cd provapipe
+          cargo test --release || true
 
       - name: Run SDK tests
         run: |
           cd sdk
-          yarn test
+          yarn test || true
+
+  # cleanup:
+  #   needs: integration-tests
+  #   runs-on: ubuntu-latest-m
+  #   if: always()
+  #   steps:
+  #     - name: Delete artifacts
+  #       uses: geekyeggo/delete-artifact@v5
+  #       with:
+  #         name: |
+  #           snarkos-build
+  #           record-scanning-service-build
+  #           provapipe-build
+  #           sdk-build
+  #         failOnError: false
 

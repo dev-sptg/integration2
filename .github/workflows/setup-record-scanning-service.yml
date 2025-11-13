@@ -1,0 +1,55 @@
+name: Setup Record Scanning Service
+
+on:
+  workflow_call:
+    secrets:
+      REPO_ACCESS_TOKEN:
+        required: true
+      DEPENDENCY_CUSNARK_SSH_KEY:
+        required: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest-m
+    steps:
+      - name: Configure SSH key for private repos
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPENDENCY_CUSNARK_SSH_KEY }}
+
+      - name: Checkout Record Scanning Service repository
+        uses: actions/checkout@v5
+        with:
+          repository: ProvableHQ/record-scanning-service
+          path: record-scanning-service
+          fetch-depth: 1
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: record-scanning-service
+          shared-key: record-scanning-service-cache
+          save-if: true
+
+      - name: Install Record Scanning Service dependencies
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: |
+          cd record-scanning-service
+          cargo build --release
+
+      - name: Upload Record Scanning Service repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: record-scanning-service-build
+          path: record-scanning-service
+          retention-days: 1
+          include-hidden-files: true
+

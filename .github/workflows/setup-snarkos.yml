@@ -1,0 +1,45 @@
+name: Setup snarkOS
+
+on:
+  workflow_call:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest-m
+    steps:
+      - name: Checkout snarkOS repository
+        uses: actions/checkout@v5
+        with:
+          repository: provableHQ/snarkOS
+          path: snarkOS
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: snarkOS
+          shared-key: snarkos-cache
+          save-if: true
+
+      - name: Install snarkOS dependencies
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: |
+          cd snarkOS
+          cargo build --release
+
+      - name: Upload snarkOS repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: snarkos-build
+          path: snarkOS
+          retention-days: 1
+          include-hidden-files: true
+
