@@ -159,8 +159,6 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
     // Track CPU snapshot for delta calculations
     let lastCpuSnapshot = initialStats.cpuSnapshot;
 
-    const nodeDebug = process.env.NODE_DEBUG ? `${process.env.NODE_DEBUG},http,https` : 'http,https';
-
     // Set up trace file capture
     const INTEGRATION_ROOT = process.env.INTEGRATION_ROOT || join(__dirname, '../..');
     const traceDir = join(INTEGRATION_ROOT, 'test-results', 'traces');
@@ -186,8 +184,7 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
             shell: false,
             env: {
                 ...process.env,
-                NODE_NO_WARNINGS: '1',
-                NODE_DEBUG: nodeDebug
+                NODE_NO_WARNINGS: '1'
             }
         });
 
@@ -204,25 +201,11 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
         });
 
         let resolved = false;
-        const startTimeMs = Date.now();
-
-        // Progress indicator - log elapsed time and system stats every 30 seconds
-        const progressInterval = setInterval(() => {
-            if (!resolved) {
-                const elapsed = ((Date.now() - startTimeMs) / 1000).toFixed(0);
-                const remaining = ((timeoutMs - (Date.now() - startTimeMs)) / 1000).toFixed(0);
-                const stats = getSystemStats(lastCpuSnapshot);
-                lastCpuSnapshot = stats.cpuSnapshot; // Update for next iteration
-                console.log(`⏱️  [${testName}] Still running... Elapsed: ${elapsed}s, Timeout in: ${remaining}s`);
-                console.log(`    💻 CPU: ${stats.cpuUsage}% (${stats.cpuCores} cores) | Memory: ${stats.memUsedGB}/${stats.memTotalGB} GB (${stats.memUsagePercent}%)`);
-            }
-        }, 30000);
 
         // Set up timeout
         const timeout = setTimeout(() => {
             if (!resolved) {
                 resolved = true;
-                clearInterval(progressInterval);
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
                 const finalStats = getSystemStats(lastCpuSnapshot);
                 
@@ -248,13 +231,7 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
                     `This usually indicates: (1) a hanging network operation, (2) an infinite loop, ` +
                     `or (3) a resource that failed to respond. Check logs above for the last operation before timeout.`;
                 
-                // Write timeout info to trace file
-                traceStream.write(`\n${'='.repeat(60)}\n`);
-                traceStream.write(`TIMEOUT: ${new Date().toISOString()}\n`);
-                traceStream.write(`Duration: ${duration}\n`);
-                traceStream.write(`Reason: ${errorMsg}\n`);
                 traceStream.end();
-                console.log(`📝 Trace saved to: ${traceFile}`);
                 
                 resolve(new TestResult(testName, 'failed', duration, errorMsg));
             }
@@ -264,23 +241,14 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
             if (!resolved) {
                 resolved = true;
                 clearTimeout(timeout);
-                clearInterval(progressInterval);
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
                 
-                // Write error to trace file
-                traceStream.write(`\n${'='.repeat(60)}\n`);
-                traceStream.write(`ERROR: ${new Date().toISOString()}\n`);
-                traceStream.write(`Message: ${error.message}\n`);
-                if (error.stack) {
-                    traceStream.write(`Stack: ${error.stack}\n`);
-                }
                 traceStream.end();
                 
                 console.log(`\n❌ ${testName} ERROR: ${error.message}`);
                 if (error.stack) {
                     console.log(`   Stack: ${error.stack}`);
                 }
-                console.log(`📝 Trace saved to: ${traceFile}`);
                 resolve(new TestResult(testName, 'failed', duration, `Process error: ${error.message}`));
             }
         });
@@ -289,28 +257,12 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
             if (!resolved) {
                 resolved = true;
                 clearTimeout(timeout);
-                clearInterval(progressInterval);
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
                 
-                // Write final status to trace file
-                traceStream.write(`\n${'='.repeat(60)}\n`);
-                traceStream.write(`Finished: ${new Date().toISOString()}\n`);
-                traceStream.write(`Duration: ${duration}\n`);
-                if (code === 0) {
-                    traceStream.write(`Status: PASSED\n`);
-                } else {
-                    traceStream.write(`Status: FAILED\n`);
-                    if (signal) {
-                        traceStream.write(`Signal: ${signal}\n`);
-                    } else if (code) {
-                        traceStream.write(`Exit code: ${code}\n`);
-                    }
-                }
                 traceStream.end();
                 
                 if (code === 0) {
                     console.log(`✅ ${testName} passed (${duration})`);
-                    console.log(`📝 Trace saved to: ${traceFile}`);
                     resolve(new TestResult(testName, 'passed', duration));
                 } else {
                     let errorMsg = '';
@@ -322,15 +274,9 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
                         errorMsg = 'Unknown error';
                     }
                     console.log(`❌ ${testName} failed (${duration}) - ${errorMsg}`);
-                    console.log(`📝 Trace saved to: ${traceFile}`);
                     resolve(new TestResult(testName, 'failed', duration, errorMsg));
                 }
             }
-        });
-        
-        // Handle trace stream errors
-        traceStream.on('error', (err) => {
-            console.warn(`⚠️  Warning: Failed to write to trace file: ${err.message}`);
         });
     });
 }

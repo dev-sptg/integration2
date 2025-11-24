@@ -21,9 +21,17 @@ import {
     AleoNetworkClient, 
     ProgramManager, 
     AleoKeyProvider, 
-    NetworkRecordProvider 
+    NetworkRecordProvider,
+    getOrInitConsensusVersionTestHeights
 } from '@provablehq/sdk/testnet.js';
 import { verifyLocalSDK } from '../../setup/test-helpers.js';
+
+// Set consensus heights for development network
+// This is required when running against a devnet - without it, the SDK uses
+// production heights and creates incorrect deployment transactions
+const DEVNET_CONSENSUS_HEIGHTS = "0,1,2,3,4,5,6,7,8,9,10,11";
+const heights = getOrInitConsensusVersionTestHeights(DEVNET_CONSENSUS_HEIGHTS);
+console.log(`Consensus version test heights initialized: [${heights.join(',')}]`);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -118,7 +126,10 @@ test('SDK Integration Tests', async (t) => {
         let networkClient, account;
         
         await t.test('SDK connects to local devnet', async () => {
-            account = new Account();
+            // Use snarkOS dev account 0 (pre-funded in genesis)
+            account = new Account({
+                privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH"
+            });
             console.log(`  Account: ${account.address().toString()}`);
             
             networkClient = new AleoNetworkClient(DEVNET_API);
@@ -148,6 +159,19 @@ test('SDK Integration Tests', async (t) => {
             const programManager = new ProgramManager(DEVNET_API, keyProvider, recordProvider);
             programManager.setAccount(account);
             
+            // Query network state to ensure SDK has fresh consensus information
+            // This is required for program checksum computation (Aleo Stack v4.2.0+)
+            // The SDK needs to know the current consensus state to compute the checksum correctly
+            const currentHeight = await networkClient.getLatestHeight();
+            console.log(`  Current block height: ${currentHeight}`);
+            
+            // Also ensure ProgramManager's networkClient has queried the network
+            // This ensures the SDK has the latest consensus state for checksum computation
+            await programManager.networkClient.getLatestHeight();
+            
+            // Small delay to ensure consensus state is stable before building transaction
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             console.log(`  Building deployment transaction (may take up to 5 minutes)...`);
             
             const timeoutPromise = new Promise((_, reject) => 
@@ -158,6 +182,12 @@ test('SDK Integration Tests', async (t) => {
             const deploymentTx = await Promise.race([deploymentPromise, timeoutPromise]);
             
             assert.ok(deploymentTx, 'Deployment transaction should be built');
+
+            // programManager.networkClient.setVerboseTransactionErrors(true);
+
+            await programManager.networkClient.submitTransaction(deploymentTx);
+            console.log("Program deployed - response:", deploymentTx);
+
             console.log(`  Deployment transaction ready`);
         }, { timeout: DEPLOYMENT_TIMEOUT_MS + 5000 });
 

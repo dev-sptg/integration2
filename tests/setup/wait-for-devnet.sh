@@ -1,28 +1,96 @@
 #!/bin/bash
 # Wait for snarkOS devnet to be ready
 
-API_URL="http://localhost:3030/v2/testnet/block/height/latest"
-MAX_WAIT=180  # seconds (4 validators need time to connect and sync)
-INTERVAL=1   # seconds
+NETWORK_NAME="testnet"
+API_BASE="http://localhost:3030/v2/$NETWORK_NAME"
+MAX_WAIT_STARTUP=180  # seconds (wait for initial API response)
+MAX_WAIT_CONSENSUS=300  # seconds (wait for consensus to stabilize)
+MIN_STABLE_HEIGHT=10  # minimum height for consensus stability check
 
 echo "Waiting for devnet to be ready..."
-echo "   Checking: $API_URL"
+echo "   API: $API_BASE"
 
-for i in $(seq 1 $MAX_WAIT); do
-    if curl -s -f "$API_URL" > /dev/null 2>&1; then
-        HEIGHT=$(curl -s "$API_URL" 2>/dev/null)
-        echo "DevNet is ready (height: $HEIGHT)"
-        exit 0
+# Helper function to check if value is an integer
+is_integer() {
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+# Step 1: Wait for API to respond
+echo ""
+echo "Step 1: Waiting for API to respond..."
+for i in $(seq 1 $MAX_WAIT_STARTUP); do
+    if curl -s -f "$API_BASE/block/height/latest" > /dev/null 2>&1; then
+        HEIGHT=$(curl -s "$API_BASE/block/height/latest" 2>/dev/null)
+        echo "✅ API is responsive (height: $HEIGHT)"
+        break
     fi
     
     if [ $((i % 15)) -eq 0 ]; then
-        echo "   Still waiting... (${i}s/${MAX_WAIT}s)"
+        echo "   Still waiting... (${i}s/${MAX_WAIT_STARTUP}s)"
     fi
     
-    sleep $INTERVAL
+    sleep 1
+    
+    if [ $i -eq $MAX_WAIT_STARTUP ]; then
+        echo "❌ Error: DevNet API failed to respond within ${MAX_WAIT_STARTUP}s" >&2
+        exit 1
+    fi
 done
 
-echo "Error: DevNet failed to start within ${MAX_WAIT}s" >&2
+# Step 2: Wait for consensus version to stabilize
+echo ""
+echo "Step 2: Waiting for consensus version to stabilize..."
+echo "   Waiting for stable consensus with at least ${MIN_STABLE_HEIGHT} blocks..."
+
+last_seen_consensus_version=0
+last_seen_height=0
+total_wait=0
+
+# Function to check consensus version stability
+consensus_version_stable() {
+    consensus_version=$(curl -s "$API_BASE/consensus_version" 2>/dev/null)
+    height=$(curl -s "$API_BASE/block/height/latest" 2>/dev/null)
+    
+    if is_integer "$consensus_version" && is_integer "$height"; then
+        # If the consensus version is greater than the last seen, we update it
+        if (( consensus_version > last_seen_consensus_version )); then
+            echo "   Consensus version updated to $consensus_version (height: $height)"
+            last_seen_consensus_version=$consensus_version
+            last_seen_height=$height
+            return 1
+        # If consensus version is stable and height is different and at least MIN_STABLE_HEIGHT
+        else
+            if (( (height != last_seen_height) && (height >= MIN_STABLE_HEIGHT) )); then
+                echo "✅ Consensus version is stable at $consensus_version (height: $height)"
+                return 0
+            fi
+        fi
+    else
+        echo "   Waiting for valid consensus data... (consensus: $consensus_version, height: $height)"
+    fi
+    
+    last_seen_consensus_version=$consensus_version
+    last_seen_height=$height
+    return 1
+}
+
+# Check consensus stability periodically
+while (( total_wait < MAX_WAIT_CONSENSUS )); do
+    if consensus_version_stable; then
+        echo ""
+        echo "✅ DevNet is ready and stable"
+        exit 0
+    fi
+    
+    sleep 30
+    total_wait=$((total_wait + 30))
+    
+    if (( total_wait < MAX_WAIT_CONSENSUS )); then
+        echo "   Waited ${total_wait}s so far... (timeout in $((MAX_WAIT_CONSENSUS - total_wait))s)"
+    fi
+done
+
+echo "❌ Error: Consensus version did not stabilize within ${MAX_WAIT_CONSENSUS}s" >&2
 echo ""
 echo "=== DevNet Logs ==="
 LOG_DIR="/tmp/snarkos-devnet-logs"

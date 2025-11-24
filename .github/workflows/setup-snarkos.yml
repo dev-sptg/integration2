@@ -34,7 +34,7 @@ jobs:
           CARGO_INCREMENTAL: 0
         run: |
           cd snarkOS
-          cargo build --release
+          cargo build --release --features=test_network
 
       - name: Upload snarkOS repository
         uses: actions/upload-artifact@v4

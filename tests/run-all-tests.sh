@@ -82,7 +82,7 @@ if [ "$SKIP_BUILD" = false ]; then
         exit 1
     fi
 
-    RUSTFLAGS="-C target-cpu=native" cargo build --release
+    RUSTFLAGS="-C target-cpu=native" cargo build --release --features=test_network
 else
     echo "Skipping clone and build steps..."
 fi
