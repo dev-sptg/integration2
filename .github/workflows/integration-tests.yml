@@ -16,22 +16,11 @@ jobs:
   snarkos-build:
     uses: ./.github/workflows/setup-snarkos.yml
 
-  record-scanning-service-build:
-    uses: ./.github/workflows/setup-record-scanning-service.yml
-    secrets:
-      REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      DEPENDENCY_CUSNARK_SSH_KEY: ${{ secrets.DEPENDENCY_CUSNARK_SSH_KEY }}
-
-  provapipe-build:
-    uses: ./.github/workflows/setup-provapipe.yml
-    secrets:
-      REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-
   sdk-build:
     uses: ./.github/workflows/setup-sdk.yml
 
   integration-tests:
-    needs: [snarkos-build, record-scanning-service-build, provapipe-build, sdk-build]
+    needs: [snarkos-build, sdk-build]
     runs-on: ubuntu-latest-m
     steps:
       - name: Checkout integration test repository
@@ -43,98 +32,75 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: snarkos-build
-          path: snarkOS
-
-      - name: Download Record Scanning Service build
-        uses: actions/download-artifact@v4
-        with:
-          name: record-scanning-service-build
-          path: record-scanning-service
-
-      - name: Download Provapipe build
-        uses: actions/download-artifact@v4
-        with:
-          name: provapipe-build
-          path: provapipe
+          path: local_build/snarkOS
 
       - name: Download SDK build
         uses: actions/download-artifact@v4
         with:
           name: sdk-build
-          path: sdk
-
-      - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: false
-
-      - name: Set up Rust cache for snarkOS
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: snarkOS
-          shared-key: snarkos-cache
-          save-if: false
-
-      - name: Set up Rust cache for Record Scanning Service
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: record-scanning-service
-          shared-key: record-scanning-service-cache
-          save-if: false
-
-      - name: Set up Rust cache for Provapipe
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: provapipe
-          shared-key: provapipe-cache
-          save-if: false
+          path: local_build/sdk
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: sdk/yarn.lock
 
-      - name: Run snarkOS tests
+      - name: Fix permissions in local_build
+        run: |
+          # Make all binaries in node_modules/.bin executable
+          find local_build -type f -path "*/node_modules/.bin/*" -exec chmod +x {} \;
+          # Make snarkOS binary executable
+          if [ -f local_build/snarkOS/target/release/snarkos ]; then
+            chmod +x local_build/snarkOS/target/release/snarkos
+            local_build/snarkOS/target/release/snarkos --version
+          fi
+          # Make any shell scripts executable
+          find local_build -type f -name "*.sh" -exec chmod +x {} \;
+
+      - name: Prepare SDK packages for integration tests
         env:
-          RUSTFLAGS: "-C target-cpu=native"
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          cd snarkOS
-          cargo test --release || true
+          chmod +x tests/setup/install-packages.sh
+          export INTEGRATION_ROOT="${PWD}"
+          source tests/setup/install-packages.sh
 
-      - name: Run Record Scanning Service tests
-        env:
-          RUSTFLAGS: "-C target-cpu=native"
+      - name: Start snarkOS devnet
         run: |
-          cd record-scanning-service
-          cargo test --release || true
+          chmod +x tests/setup/start-devnet.sh
+          ./tests/setup/start-devnet.sh
 
-      - name: Run Provapipe tests
-        env:
-          RUSTFLAGS: "-C target-cpu=native"
+      - name: Wait for devnet readiness
         run: |
-          cd provapipe
-          cargo test --release || true
+          chmod +x tests/setup/wait-for-devnet.sh
+          ./tests/setup/wait-for-devnet.sh
 
-      - name: Run SDK tests
+      - name: Run integration tests
         run: |
-          cd sdk
-          yarn test || true
+          chmod +x tests/run-all-tests.sh
+          # Use --dev flag since devnet is managed separately in CI
+          # Use --skip-build flag since we downloaded artifacts
+          ./tests/run-all-tests.sh --dev --skip-build || true
 
-  # cleanup:
-  #   needs: integration-tests
-  #   runs-on: ubuntu-latest-m
-  #   if: always()
-  #   steps:
-  #     - name: Delete artifacts
-  #       uses: geekyeggo/delete-artifact@v5
-  #       with:
-  #         name: |
-  #           snarkos-build
-  #           record-scanning-service-build
-  #           provapipe-build
-  #           sdk-build
-  #         failOnError: false
+      - name: Stop snarkOS devnet
+        if: always()
+        run: |
+          chmod +x tests/setup/stop-devnet.sh
+          ./tests/setup/stop-devnet.sh || true
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-report
+          path: test-results/test-report.json
+          retention-days: 7
+
+      - name: Post test summary
+        if: always()
+        run: |
+          if [ -f test-results/github-summary.md ]; then
+            echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
+            cat test-results/github-summary.md >> $GITHUB_STEP_SUMMARY
+          fi
 

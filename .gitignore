@@ -36,3 +36,8 @@ Cargo.lock
 .env.local
 
 local_build/
+
+
+*.ledger-*
+
+*.current-proposal-*
