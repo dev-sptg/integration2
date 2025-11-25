@@ -36,11 +36,12 @@ jobs:
           cd snarkOS
           cargo build --release --features=test_network
 
-      - name: Upload snarkOS repository
-        uses: actions/upload-artifact@v4
+      # Upload only the binary (not full repo with target directory)
+      # This reduces artifact size from ~3.3GB to ~111MB
+      - name: Upload snarkOS binary
+        uses: actions/upload-artifact@v5
         with:
           name: snarkos-build
-          path: snarkOS
+          path: snarkOS/target/release/snarkos
           retention-days: 1
-          include-hidden-files: true
 

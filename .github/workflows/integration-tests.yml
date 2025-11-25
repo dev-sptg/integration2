@@ -28,14 +28,16 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Download snarkOS build
-        uses: actions/download-artifact@v4
+      # Download minimal snarkOS artifact (just the binary)
+      - name: Download snarkOS binary
+        uses: actions/download-artifact@v5
         with:
           name: snarkos-build
-          path: local_build/snarkOS
+          path: local_build/snarkOS/target/release
 
+      # Download minimal SDK artifact (just the tarball and wasm dist)
       - name: Download SDK build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: sdk-build
           path: local_build/sdk
@@ -45,25 +47,40 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Fix permissions in local_build
+      - name: Setup snarkOS binary
         run: |
-          # Make all binaries in node_modules/.bin executable
-          find local_build -type f -path "*/node_modules/.bin/*" -exec chmod +x {} \;
-          # Make snarkOS binary executable
-          if [ -f local_build/snarkOS/target/release/snarkos ]; then
-            chmod +x local_build/snarkOS/target/release/snarkos
-            local_build/snarkOS/target/release/snarkos --version
-          fi
-          # Make any shell scripts executable
-          find local_build -type f -name "*.sh" -exec chmod +x {} \;
+          chmod +x local_build/snarkOS/target/release/snarkos
+          local_build/snarkOS/target/release/snarkos --version
+          export SNARKOS_BINARY_PATH="${PWD}/local_build/snarkOS/target/release/snarkos"
+          echo "SNARKOS_BINARY_PATH=$SNARKOS_BINARY_PATH" >> $GITHUB_ENV
 
       - name: Prepare SDK packages for integration tests
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          chmod +x tests/setup/install-packages.sh
-          export INTEGRATION_ROOT="${PWD}"
-          source tests/setup/install-packages.sh
+          # SDK tarball is pre-built, just need to update test suite package.json files
+          SDK_TARBALL="${PWD}/local_build/sdk/sdk-local.tgz"
+          echo "Using pre-built SDK tarball: $SDK_TARBALL"
+          
+          # Extract version from tarball for verification
+          SDK_LOCAL_VERSION=$(tar -xzf "$SDK_TARBALL" -O package/package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+          echo "SDK version: $SDK_LOCAL_VERSION"
+          
+          # Update test suite package.json files to use the tarball
+          for testDir in tests/integration/*/; do
+            if [ -f "$testDir/package.json" ]; then
+              relPath=$(realpath --relative-to="$testDir" "$SDK_TARBALL")
+              node -e "
+                const fs = require('fs');
+                const pkgPath = '$testDir/package.json';
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                pkg.dependencies['@provablehq/sdk'] = 'file:$relPath';
+                fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+              "
+              echo "Updated: $testDir/package.json"
+            fi
+          done
+          
+          echo "SDK_TARBALL=$SDK_TARBALL" >> $GITHUB_ENV
+          echo "SDK_LOCAL_VERSION=$SDK_LOCAL_VERSION" >> $GITHUB_ENV
 
       - name: Start snarkOS devnet
         run: |
@@ -90,7 +107,7 @@ jobs:
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: integration-test-report
           path: test-results/test-report.json

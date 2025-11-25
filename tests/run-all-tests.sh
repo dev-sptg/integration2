@@ -92,8 +92,13 @@ echo ""
 # ============================================================
 # Step 3: Build and prepare SDK packages
 # ============================================================
-echo "Preparing SDK packages..."
-source "$SETUP_DIR/install-packages.sh"
+# Skip if SDK_TARBALL is already set (e.g., in CI with pre-built artifacts)
+if [ -n "$SDK_TARBALL" ] && [ -f "$SDK_TARBALL" ]; then
+    echo "Using pre-built SDK tarball: $SDK_TARBALL"
+else
+    echo "Preparing SDK packages..."
+    source "$SETUP_DIR/install-packages.sh"
+fi
 
 echo ""
 
