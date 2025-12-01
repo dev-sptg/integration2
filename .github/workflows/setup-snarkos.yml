@@ -2,46 +2,105 @@ name: Setup snarkOS
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref (tag, branch, or commit) to checkout'
+        required: false
+        type: string
+        default: ''
+      artifact_suffix:
+        description: 'Suffix for artifact name (for matrix builds)'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      version:
+        description: 'snarkOS version (tag or commit hash)'
+        value: ${{ jobs.setup.outputs.version }}
+      cache_hit:
+        description: 'Whether the binary was restored from cache'
+        value: ${{ jobs.setup.outputs.cache_hit }}
 
 jobs:
   setup:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-latest-l
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      cache_hit: ${{ steps.binary-cache.outputs.cache-hit }}
     steps:
+      - name: Determine cache key
+        id: version
+        run: |
+          REF="${{ inputs.ref }}"
+          if [ -z "$REF" ]; then
+            # No ref specified - get latest commit from default branch
+            REF="default-$(date +%Y%m%d)"
+          fi
+          echo "version=$REF" >> $GITHUB_OUTPUT
+          echo "Cache key: snarkos-binary-$REF"
+
+      # Try to restore cached binary first
+      - name: Check for cached snarkOS binary
+        id: binary-cache
+        uses: actions/cache@v4
+        with:
+          path: snarkos-binary
+          key: snarkos-binary-${{ steps.version.outputs.version }}
+
+      # If cache hit, skip the entire build process
+      - name: Use cached binary
+        if: steps.binary-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "✅ Using cached snarkOS binary for ${{ steps.version.outputs.version }}"
+          ls -la snarkos-binary/
+
+      # Only checkout if we need to build
       - name: Checkout snarkOS repository
+        if: steps.binary-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v5
         with:
           repository: provableHQ/snarkOS
           path: snarkOS
+          ref: ${{ inputs.ref || '' }}
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Rust
+        if: steps.binary-cache.outputs.cache-hit != 'true'
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           cache: false
 
       - name: Set up Rust cache
+        if: steps.binary-cache.outputs.cache-hit != 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: snarkOS
-          shared-key: snarkos-cache
+          shared-key: snarkos-rust-${{ inputs.ref || 'default' }}
           save-if: true
 
-      - name: Install snarkOS dependencies
+      - name: Build snarkOS
+        if: steps.binary-cache.outputs.cache-hit != 'true'
         env:
-          RUSTFLAGS: "-C target-cpu=native"
           CARGO_INCREMENTAL: 0
         run: |
+          echo "🔨 Building snarkOS ${{ steps.version.outputs.version }}..."
           cd snarkOS
           cargo build --release --features=test_network
 
-      # Upload only the binary (not full repo with target directory)
-      # This reduces artifact size from ~3.3GB to ~111MB
+      # Save binary to cache directory
+      - name: Prepare binary for caching
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p snarkos-binary
+          cp snarkOS/target/release/snarkos snarkos-binary/
+          echo "Binary saved for caching"
+
+      # Upload artifact (from cache dir, works for both cached and fresh builds)
       - name: Upload snarkOS binary
         uses: actions/upload-artifact@v5
         with:
-          name: snarkos-build
-          path: snarkOS/target/release/snarkos
+          name: snarkos-build${{ inputs.artifact_suffix }}
+          path: snarkos-binary/snarkos
           retention-days: 1
-

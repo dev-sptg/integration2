@@ -1,0 +1,102 @@
+name: Compatibility Matrix on Release
+
+on:
+  # Trigger when a new release is published in snarkOS or SDK
+  repository_dispatch:
+    types: [snarkos-release, sdk-release]
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component that was released'
+        required: true
+        type: choice
+        options:
+          - snarkos
+          - sdk
+      version:
+        description: 'Version tag (e.g., v4.4.0)'
+        required: true
+        type: string
+
+jobs:
+  determine-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      snarkos_versions: ${{ steps.versions.outputs.snarkos }}
+      sdk_versions: ${{ steps.versions.outputs.sdk }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Determine versions to test
+        id: versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSIONS_FILE="compatibility/versions.json"
+          
+          # Determine which component was released
+          COMPONENT="${{ github.event.action || inputs.component }}"
+          NEW_VERSION="${{ github.event.client_payload.version || inputs.version }}"
+          
+          echo "New release: $COMPONENT $NEW_VERSION"
+          
+          # Get the latest N versions of the OTHER component to test against
+          TEST_LATEST_N=$(jq -r '.test_latest_n_tags // 3' "$VERSIONS_FILE")
+          
+          if [ "$COMPONENT" == "snarkos-release" ] || [ "$COMPONENT" == "snarkos" ]; then
+            # New snarkOS release - test against latest SDK versions
+            SNARKOS_VERSIONS="$NEW_VERSION"
+            SDK_VERSIONS=$(gh api repos/ProvableHQ/sdk/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//')
+            
+            # Also include SDK branches
+            SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
+            if [ -n "$SDK_BRANCHES" ]; then
+              SDK_VERSIONS="${SDK_VERSIONS},${SDK_BRANCHES}"
+            fi
+          else
+            # New SDK release - test against latest snarkOS versions
+            SDK_VERSIONS="$NEW_VERSION"
+            SNARKOS_VERSIONS=$(gh api repos/provableHQ/snarkOS/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//')
+            
+            # Also include snarkOS branches
+            SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
+            if [ -n "$SNARKOS_BRANCHES" ]; then
+              SNARKOS_VERSIONS="${SNARKOS_VERSIONS},${SNARKOS_BRANCHES}"
+            fi
+          fi
+          
+          echo "Testing snarkOS: $SNARKOS_VERSIONS"
+          echo "Testing SDK: $SDK_VERSIONS"
+          
+          echo "snarkos=$SNARKOS_VERSIONS" >> $GITHUB_OUTPUT
+          echo "sdk=$SDK_VERSIONS" >> $GITHUB_OUTPUT
+
+  run-matrix:
+    needs: determine-versions
+    uses: ./.github/workflows/compatibility-matrix.yml
+    with:
+      snarkos_versions: ${{ needs.determine-versions.outputs.snarkos_versions }}
+      sdk_versions: ${{ needs.determine-versions.outputs.sdk_versions }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+  # Notify about the new compatibility results
+  notify:
+    needs: [determine-versions, run-matrix]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create summary
+        run: |
+          echo "## Release Compatibility Test Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event.action || inputs.component }} release" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ github.event.client_payload.version || inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the full compatibility matrix on the [GitHub Pages dashboard](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)." >> $GITHUB_STEP_SUMMARY
+

@@ -2,20 +2,71 @@ name: Setup SDK
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref (tag, branch, or commit) to checkout'
+        required: false
+        type: string
+        default: ''
+      artifact_suffix:
+        description: 'Suffix for artifact name (for matrix builds)'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      version:
+        description: 'SDK version (tag or commit hash)'
+        value: ${{ jobs.setup.outputs.version }}
+      cache_hit:
+        description: 'Whether the build was restored from cache'
+        value: ${{ jobs.setup.outputs.cache_hit }}
 
 jobs:
   setup:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-latest-l
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      cache_hit: ${{ steps.build-cache.outputs.cache-hit }}
     steps:
+      - name: Determine cache key
+        id: version
+        run: |
+          REF="${{ inputs.ref }}"
+          if [ -z "$REF" ]; then
+            # No ref specified - get latest commit from default branch
+            REF="default-$(date +%Y%m%d)"
+          fi
+          echo "version=$REF" >> $GITHUB_OUTPUT
+          echo "Cache key: sdk-build-$REF"
+
+      # Try to restore cached build first
+      - name: Check for cached SDK build
+        id: build-cache
+        uses: actions/cache@v4
+        with:
+          path: sdk-build-cache
+          key: sdk-build-${{ steps.version.outputs.version }}
+
+      # If cache hit, skip the entire build process
+      - name: Use cached build
+        if: steps.build-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "✅ Using cached SDK build for ${{ steps.version.outputs.version }}"
+          ls -la sdk-build-cache/
+
+      # Only checkout if we need to build
       - name: Checkout SDK repository
+        if: steps.build-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v5
         with:
           repository: ProvableHQ/sdk
           path: sdk
+          ref: ${{ inputs.ref || '' }}
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Rust
+        if: steps.build-cache.outputs.cache-hit != 'true'
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache: false
@@ -24,13 +75,15 @@ jobs:
           target: wasm32-unknown-unknown
 
       - name: Set up Rust cache for WASM build
+        if: steps.build-cache.outputs.cache-hit != 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: sdk/wasm
-          shared-key: sdk-wasm-cache
+          shared-key: sdk-wasm-rust-${{ inputs.ref || 'default' }}
           save-if: true
 
       - name: Set up Node.js
+        if: steps.build-cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -38,20 +91,26 @@ jobs:
           cache-dependency-path: sdk/yarn.lock
 
       - name: Install SDK dependencies
+        if: steps.build-cache.outputs.cache-hit != 'true'
         working-directory: sdk
         run: yarn install --frozen-lockfile
 
       - name: Build SDK
+        if: steps.build-cache.outputs.cache-hit != 'true'
         working-directory: sdk
-        run: yarn build:all
+        run: |
+          echo "🔨 Building SDK ${{ steps.version.outputs.version }}..."
+          yarn build:all
 
       - name: Get SDK commit hash
+        if: steps.build-cache.outputs.cache-hit != 'true'
         id: sdk-commit
         working-directory: sdk
         run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       # Create SDK tarball with local version marker
       - name: Create SDK tarball
+        if: steps.build-cache.outputs.cache-hit != 'true'
         working-directory: sdk/sdk
         run: |
           # Mark version with local build identifier
@@ -72,17 +131,24 @@ jobs:
           
           # Move tarball to known location
           mv provablehq-sdk-*.tgz ../sdk-local.tgz
-          echo "SDK_LOCAL_VERSION=$LOCAL_VERSION" >> $GITHUB_ENV
 
-      # Upload only the tarball and snarkOS binary path info
-      # This reduces artifact size from ~1.2GB to ~50MB
+      # Save build artifacts to cache directory
+      - name: Prepare build for caching
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p sdk-build-cache
+          cp sdk/sdk-local.tgz sdk-build-cache/
+          cp -r sdk/wasm/dist sdk-build-cache/wasm-dist
+          cp sdk/wasm/package.json sdk-build-cache/wasm-package.json
+          echo "Build artifacts saved for caching"
+
+      # Upload artifact (from cache dir, works for both cached and fresh builds)
       - name: Upload SDK build artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: sdk-build
+          name: sdk-build${{ inputs.artifact_suffix }}
           path: |
-            sdk/sdk-local.tgz
-            sdk/wasm/dist
-            sdk/wasm/package.json
+            sdk-build-cache/sdk-local.tgz
+            sdk-build-cache/wasm-dist
+            sdk-build-cache/wasm-package.json
           retention-days: 1
-

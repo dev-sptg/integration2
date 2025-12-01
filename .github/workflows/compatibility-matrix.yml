@@ -1,0 +1,352 @@
+name: Compatibility Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      snarkos_versions:
+        description: 'snarkOS versions (comma-separated tags/branches, e.g., "v4.4.0,v4.3.0,mainnet")'
+        required: false
+        type: string
+        default: ''
+      sdk_versions:
+        description: 'SDK versions (comma-separated tags/branches, e.g., "v0.9.12,v0.9.11,mainnet")'
+        required: false
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      snarkos_versions:
+        description: 'snarkOS versions (comma-separated)'
+        required: false
+        type: string
+        default: ''
+      sdk_versions:
+        description: 'SDK versions (comma-separated)'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: compatibility-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Generate the version matrix from versions.json or inputs
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Generate version matrix
+        id: set-matrix
+        run: |
+          # Read versions from config file
+          VERSIONS_FILE="compatibility/versions.json"
+          
+          # Get snarkOS versions
+          if [ -n "${{ inputs.snarkos_versions }}" ]; then
+            SNARKOS_VERSIONS="${{ inputs.snarkos_versions }}"
+          else
+            # Read from versions.json - combine tags and branches
+            SNARKOS_TAGS=$(jq -r '.snarkos.tags | join(",")' "$VERSIONS_FILE")
+            SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
+            SNARKOS_VERSIONS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
+          fi
+          
+          # Get SDK versions
+          if [ -n "${{ inputs.sdk_versions }}" ]; then
+            SDK_VERSIONS="${{ inputs.sdk_versions }}"
+          else
+            SDK_TAGS=$(jq -r '.sdk.tags | join(",")' "$VERSIONS_FILE")
+            SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
+            SDK_VERSIONS="${SDK_TAGS},${SDK_BRANCHES}"
+          fi
+          
+          # Convert to JSON arrays
+          SNARKOS_ARRAY=$(echo "$SNARKOS_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
+          SDK_ARRAY=$(echo "$SDK_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
+          
+          # Create matrix JSON (compact, single line for GITHUB_OUTPUT)
+          MATRIX=$(jq -cn \
+            --argjson snarkos "$SNARKOS_ARRAY" \
+            --argjson sdk "$SDK_ARRAY" \
+            '{snarkos_version: $snarkos, sdk_version: $sdk}')
+          
+          echo "Generated matrix:"
+          echo "$MATRIX" | jq .
+          
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  # Build all snarkOS versions in parallel
+  build-snarkos:
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).snarkos_version }}
+    uses: ./.github/workflows/setup-snarkos.yml
+    with:
+      ref: ${{ matrix.snarkos_version }}
+      artifact_suffix: -${{ matrix.snarkos_version }}
+
+  # Build all SDK versions in parallel
+  build-sdk:
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).sdk_version }}
+    uses: ./.github/workflows/setup-sdk.yml
+    with:
+      ref: ${{ matrix.sdk_version }}
+      artifact_suffix: -${{ matrix.sdk_version }}
+
+  # Test all combinations
+  test-compatibility:
+    needs: [generate-matrix, build-snarkos, build-sdk]
+    runs-on: ubuntu-latest-l
+    strategy:
+      fail-fast: false
+      matrix:
+        snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).snarkos_version }}
+        sdk_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).sdk_version }}
+    steps:
+      - name: Checkout integration test repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download snarkOS binary
+        uses: actions/download-artifact@v5
+        with:
+          name: snarkos-build-${{ matrix.snarkos_version }}
+          path: local_build/snarkOS
+
+      - name: Download SDK build
+        uses: actions/download-artifact@v5
+        with:
+          name: sdk-build-${{ matrix.sdk_version }}
+          path: local_build/sdk
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Setup snarkOS binary
+        run: |
+          # Handle both old and new artifact structures
+          if [ -f "local_build/snarkOS/snarkos" ]; then
+            SNARKOS_BIN="local_build/snarkOS/snarkos"
+          else
+            SNARKOS_BIN="local_build/snarkOS/target/release/snarkos"
+          fi
+          chmod +x "$SNARKOS_BIN"
+          "$SNARKOS_BIN" --version || true
+          echo "SNARKOS_BINARY_PATH=${PWD}/${SNARKOS_BIN}" >> $GITHUB_ENV
+
+      - name: Prepare SDK packages for integration tests
+        run: |
+          # Handle both old and new artifact structures
+          if [ -f "local_build/sdk/sdk-local.tgz" ]; then
+            SDK_TARBALL="${PWD}/local_build/sdk/sdk-local.tgz"
+          else
+            SDK_TARBALL="${PWD}/local_build/sdk/sdk-build-cache/sdk-local.tgz"
+          fi
+          echo "Using pre-built SDK tarball: $SDK_TARBALL"
+          
+          SDK_LOCAL_VERSION=$(tar -xzf "$SDK_TARBALL" -O package/package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+          echo "SDK version: $SDK_LOCAL_VERSION"
+          
+          for testDir in tests/integration/*/; do
+            if [ -f "$testDir/package.json" ]; then
+              relPath=$(realpath --relative-to="$testDir" "$SDK_TARBALL")
+              node -e "
+                const fs = require('fs');
+                const pkgPath = '$testDir/package.json';
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                pkg.dependencies['@provablehq/sdk'] = 'file:$relPath';
+                fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+              "
+              echo "Updated: $testDir/package.json"
+            fi
+          done
+          
+          echo "SDK_TARBALL=$SDK_TARBALL" >> $GITHUB_ENV
+          echo "SDK_LOCAL_VERSION=$SDK_LOCAL_VERSION" >> $GITHUB_ENV
+
+      - name: Start snarkOS devnet
+        run: |
+          chmod +x tests/setup/start-devnet.sh
+          ./tests/setup/start-devnet.sh
+
+      - name: Wait for devnet readiness
+        run: |
+          chmod +x tests/setup/wait-for-devnet.sh
+          ./tests/setup/wait-for-devnet.sh
+
+      - name: Run integration tests
+        id: tests
+        run: |
+          chmod +x tests/run-all-tests.sh
+          ./tests/run-all-tests.sh --dev --skip-build && echo "result=pass" >> $GITHUB_OUTPUT || echo "result=fail" >> $GITHUB_OUTPUT
+
+      - name: Stop snarkOS devnet
+        if: always()
+        run: |
+          chmod +x tests/setup/stop-devnet.sh
+          ./tests/setup/stop-devnet.sh || true
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-report-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}
+          path: test-results/
+          retention-days: 7
+
+      - name: Save result
+        if: always()
+        run: |
+          mkdir -p compatibility-results
+          echo '{
+            "snarkos_version": "${{ matrix.snarkos_version }}",
+            "sdk_version": "${{ matrix.sdk_version }}",
+            "result": "${{ steps.tests.outputs.result || 'error' }}",
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+          }' > compatibility-results/result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}.json
+
+      - name: Upload result artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: compat-result-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}
+          path: compatibility-results/
+          retention-days: 7
+
+  # Aggregate results and update matrix.json
+  aggregate-results:
+    needs: [generate-matrix, test-compatibility]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download all result artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: compat-result-*
+          path: all-results
+          merge-multiple: true
+
+      - name: Aggregate results into matrix.json
+        run: |
+          # Read existing matrix or create new one
+          MATRIX_FILE="compatibility/matrix.json"
+          
+          if [ -f "$MATRIX_FILE" ]; then
+            EXISTING=$(cat "$MATRIX_FILE")
+          else
+            EXISTING='{"last_updated": null, "results": []}'
+          fi
+          
+          # Collect all new results
+          NEW_RESULTS="[]"
+          for result_file in all-results/*.json; do
+            if [ -f "$result_file" ]; then
+              NEW_RESULTS=$(echo "$NEW_RESULTS" | jq --slurpfile new "$result_file" '. + $new')
+            fi
+          done
+          
+          # Merge with existing results (update existing, add new)
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          MERGED=$(echo "$EXISTING" | jq --argjson new "$NEW_RESULTS" --arg ts "$TIMESTAMP" '
+            .last_updated = $ts |
+            .results = (
+              # Remove old entries that match new ones
+              [.results[] | select(
+                . as $old |
+                ($new | map(select(.snarkos_version == $old.snarkos_version and .sdk_version == $old.sdk_version)) | length) == 0
+              )] +
+              # Add all new entries
+              $new
+            ) |
+            # Sort by versions
+            .results |= sort_by([.snarkos_version, .sdk_version])
+          ')
+          
+          echo "$MERGED" | jq . > "$MATRIX_FILE"
+          
+          echo "Updated matrix.json:"
+          cat "$MATRIX_FILE"
+
+      - name: Commit updated matrix
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add compatibility/matrix.json
+          git diff --staged --quiet || git commit -m "Update compatibility matrix [skip ci]"
+          
+          # Retry push with pull --rebase to handle concurrent updates
+          for i in 1 2 3 4 5; do
+            if git push; then
+              echo "✅ Push succeeded"
+              break
+            fi
+            echo "Push failed, attempt $i/5 - pulling and retrying..."
+            git pull --rebase origin ${{ github.ref_name }}
+            sleep $((i * 2))
+          done
+
+      - name: Generate GitHub summary
+        run: |
+          echo "## Compatibility Matrix Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| snarkOS | SDK | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          jq -r '.results[] | "| \(.snarkos_version) | \(.sdk_version) | \(if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) |"' compatibility/matrix.json >> $GITHUB_STEP_SUMMARY
+
+  # Package dashboard as downloadable artifact
+  # Note: GitHub Pages disabled because repo is private but Pages would be public
+  package-dashboard:
+    needs: aggregate-results
+    if: always() && needs.aggregate-results.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Pull latest changes
+        run: git pull origin ${{ github.ref_name }} || true
+
+      - name: Prepare dashboard
+        run: |
+          mkdir -p dashboard-dist
+          cp compatibility/dashboard/* dashboard-dist/
+          cp compatibility/matrix.json dashboard-dist/
+          cp compatibility/versions.json dashboard-dist/
+          echo "Dashboard packaged. To view locally:"
+          echo "  1. Download and extract this artifact"
+          echo "  2. Run: npx serve dashboard-dist"
+          echo "  3. Open http://localhost:3000"
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: compatibility-dashboard
+          path: dashboard-dist/
+          retention-days: 30
+

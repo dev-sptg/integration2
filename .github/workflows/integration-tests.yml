@@ -21,7 +21,7 @@ jobs:
 
   integration-tests:
     needs: [snarkos-build, sdk-build]
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-latest-l
     steps:
       - name: Checkout integration test repository
         uses: actions/checkout@v5

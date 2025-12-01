@@ -3,9 +3,9 @@
 
 NETWORK_NAME="testnet"
 API_BASE="http://localhost:3030/v2/$NETWORK_NAME"
-MAX_WAIT_STARTUP=180  # seconds (wait for initial API response)
+MAX_WAIT_STARTUP=360  # seconds (wait for initial API response)
 MAX_WAIT_CONSENSUS=300  # seconds (wait for consensus to stabilize)
-MIN_STABLE_HEIGHT=10  # minimum height for consensus stability check
+MIN_STABLE_HEIGHT=12  # minimum height for consensus stability check
 
 echo "Waiting for devnet to be ready..."
 echo "   API: $API_BASE"
@@ -19,20 +19,25 @@ is_integer() {
 echo ""
 echo "Step 1: Waiting for API to respond..."
 for i in $(seq 1 $MAX_WAIT_STARTUP); do
-    if curl -s -f "$API_BASE/block/height/latest" > /dev/null 2>&1; then
-        HEIGHT=$(curl -s "$API_BASE/block/height/latest" 2>/dev/null)
-        echo "✅ API is responsive (height: $HEIGHT)"
+    RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$API_BASE/block/height/latest" 2>&1)
+    HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+    BODY=$(echo "$RESPONSE" | grep -v "HTTP_CODE:")
+    
+    if [ "$HTTP_CODE" = "200" ] && [ -n "$BODY" ]; then
+        echo "✅ API is responsive (height: $BODY)"
         break
     fi
     
     if [ $((i % 15)) -eq 0 ]; then
         echo "   Still waiting... (${i}s/${MAX_WAIT_STARTUP}s)"
+        echo "   Last response: HTTP $HTTP_CODE - $BODY"
     fi
     
     sleep 1
     
     if [ $i -eq $MAX_WAIT_STARTUP ]; then
         echo "❌ Error: DevNet API failed to respond within ${MAX_WAIT_STARTUP}s" >&2
+        echo "   Last response: HTTP $HTTP_CODE - $BODY"
         exit 1
     fi
 done

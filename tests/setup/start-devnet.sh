@@ -13,22 +13,26 @@ NETWORK_ID=1
 LOG_DIR="/tmp/snarkos-devnet-logs"
 
 # Find snarkOS binary
-if [ -d "$INTEGRATION_ROOT/local_build/snarkOS" ]; then
-    SNARKOS_BASE="$INTEGRATION_ROOT/local_build/snarkOS"
-elif [ -d "$INTEGRATION_ROOT/snarkOS" ]; then
-    SNARKOS_BASE="$INTEGRATION_ROOT/snarkOS"
+# Priority: 1) SNARKOS_BINARY_PATH env var, 2) direct binary, 3) target/release path
+if [ -n "$SNARKOS_BINARY_PATH" ] && [ -f "$SNARKOS_BINARY_PATH" ]; then
+    SNARKOS_BIN="$SNARKOS_BINARY_PATH"
+elif [ -f "$INTEGRATION_ROOT/local_build/snarkOS/snarkos" ]; then
+    SNARKOS_BIN="$INTEGRATION_ROOT/local_build/snarkOS/snarkos"
+elif [ -f "$INTEGRATION_ROOT/local_build/snarkOS/target/release/snarkos" ]; then
+    SNARKOS_BIN="$INTEGRATION_ROOT/local_build/snarkOS/target/release/snarkos"
+elif [ -f "$INTEGRATION_ROOT/snarkOS/target/release/snarkos" ]; then
+    SNARKOS_BIN="$INTEGRATION_ROOT/snarkOS/target/release/snarkos"
 else
-    echo "Error: snarkOS not found. Please build snarkOS first." >&2
+    echo "Error: snarkOS binary not found." >&2
+    echo "Searched locations:" >&2
+    echo "  - \$SNARKOS_BINARY_PATH: ${SNARKOS_BINARY_PATH:-not set}" >&2
+    echo "  - $INTEGRATION_ROOT/local_build/snarkOS/snarkos" >&2
+    echo "  - $INTEGRATION_ROOT/local_build/snarkOS/target/release/snarkos" >&2
+    echo "  - $INTEGRATION_ROOT/snarkOS/target/release/snarkos" >&2
     exit 1
 fi
 
-SNARKOS_BIN="$SNARKOS_BASE/target/release/snarkos"
-
-if [ ! -f "$SNARKOS_BIN" ]; then
-    echo "Error: snarkOS binary not found at $SNARKOS_BIN" >&2
-    echo "Build with: cd $SNARKOS_BASE && cargo build --release"
-    exit 1
-fi
+echo "Using snarkOS binary: $SNARKOS_BIN"
 
 # Create log directory
 mkdir -p "$LOG_DIR"
