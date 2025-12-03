@@ -2,9 +2,16 @@ name: Compatibility Matrix
 
 on:
   schedule:
-    - cron: '45 5 * * *'  # Run every night at 5:45 AM UTC
+    - cron: '13 2 * * *'  # Run nightly at 02:13 UTC to avoid crowded timeslots
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
+      test_latest_only:
+        description: 'Test only latest versions (skip older tags)'
+        required: false
+        type: boolean
+        default: false
       snarkos_versions:
         description: 'snarkOS versions (comma-separated tags/branches, e.g., "v4.4.0,v4.3.0,mainnet")'
         required: false
@@ -36,6 +43,8 @@ jobs:
   # Generate the version matrix from versions.json or inputs
   generate-matrix:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -44,27 +53,145 @@ jobs:
 
       - name: Generate version matrix
         id: set-matrix
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Read versions from config file
           VERSIONS_FILE="compatibility/versions.json"
           
-          # Get snarkOS versions
-          if [ -n "${{ inputs.snarkos_versions }}" ]; then
-            SNARKOS_VERSIONS="${{ inputs.snarkos_versions }}"
-          else
-            # Read from versions.json - combine tags and branches
-            SNARKOS_TAGS=$(jq -r '.snarkos.tags | join(",")' "$VERSIONS_FILE")
-            SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
-            SNARKOS_VERSIONS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
+          # Determine if we should fetch latest versions (Schedule or Manual flag)
+          SHOULD_FETCH="false"
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            SHOULD_FETCH="true"
+          elif [ "${{ inputs.test_latest_only }}" == "true" ]; then
+            SHOULD_FETCH="true"
           fi
-          
-          # Get SDK versions
-          if [ -n "${{ inputs.sdk_versions }}" ]; then
-            SDK_VERSIONS="${{ inputs.sdk_versions }}"
+
+          SNARKOS_VERSIONS=""
+          SDK_VERSIONS=""
+
+          if [ "$SHOULD_FETCH" == "true" ]; then
+            echo "Fetching latest versions from GitHub..."
+            TEST_LATEST_N=$(jq -r '.test_latest_n_tags // 3' "$VERSIONS_FILE")
+            INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
+            
+            if [ "${{ inputs.test_latest_only }}" == "true" ]; then
+              TEST_LATEST_N=1
+            fi
+            
+            # Fetch latest snarkOS tags
+            echo "Fetching snarkOS tags..."
+            if ! SNARKOS_TAGS=$(gh api repos/provableHQ/snarkOS/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
+              echo "❌ Failed to fetch snarkOS tags from GitHub API"
+              exit 1
+            fi
+            if [ -z "$SNARKOS_TAGS" ]; then
+              echo "❌ No snarkOS tags returned from GitHub API"
+              exit 1
+            fi
+            echo "Found snarkOS tags: $SNARKOS_TAGS"
+            
+            # Fetch latest SDK tags
+            echo "Fetching SDK tags..."
+            if ! SDK_TAGS=$(gh api repos/ProvableHQ/sdk/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
+              echo "❌ Failed to fetch SDK tags from GitHub API"
+              exit 1
+            fi
+            if [ -z "$SDK_TAGS" ]; then
+              echo "❌ No SDK tags returned from GitHub API"
+              exit 1
+            fi
+            echo "Found SDK tags: $SDK_TAGS"
+            
+            # Update versions.json
+            echo "Updating versions.json with found tags..."
+            jq --arg snarkos "$SNARKOS_TAGS" --arg sdk "$SDK_TAGS" '
+              .snarkos.tags = ($snarkos | split(",")) |
+              .sdk.tags = ($sdk | split(","))
+            ' "$VERSIONS_FILE" > "${VERSIONS_FILE}.tmp" && mv "${VERSIONS_FILE}.tmp" "$VERSIONS_FILE"
+            
+            # Commit and push (skip on PR)
+            if [ "${{ github.event_name }}" != "pull_request" ]; then
+              git config --local user.email "github-actions[bot]@users.noreply.github.com"
+              git config --local user.name "github-actions[bot]"
+              git add "$VERSIONS_FILE"
+              
+              if ! git diff --staged --quiet; then
+                git commit -m "Update versions.json with latest tags [skip ci]"
+                
+                # Robust push with retry
+                PUSH_SUCCESS=false
+                for i in 1 2 3 4 5; do
+                  if git push; then
+                    echo "✅ Push succeeded"
+                    PUSH_SUCCESS=true
+                    break
+                  fi
+                  echo "Push failed, attempt $i/5 - pulling and retrying..."
+                  git pull --rebase origin ${{ github.ref_name }}
+                  sleep $((i * 2))
+                done
+                
+                if [ "$PUSH_SUCCESS" = "false" ]; then
+                  echo "❌ Failed to push changes after 5 attempts"
+                  exit 1
+                fi
+                echo "✅ Updated and pushed versions.json"
+              else
+                echo "No changes to versions.json"
+              fi
+            else
+              echo "Skipping commit/push on pull request"
+            fi
+            
+            # Set versions for matrix (Add branches if configured)
+            if [ "$INCLUDE_BRANCHES" == "true" ]; then
+              SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
+              SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
+              
+              if [ -n "$SNARKOS_BRANCHES" ]; then
+                SNARKOS_TAGS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
+              fi
+              if [ -n "$SDK_BRANCHES" ]; then
+                SDK_TAGS="${SDK_TAGS},${SDK_BRANCHES}"
+              fi
+            fi
+            
+            SNARKOS_VERSIONS="$SNARKOS_TAGS"
+            SDK_VERSIONS="$SDK_TAGS"
+
           else
-            SDK_TAGS=$(jq -r '.sdk.tags | join(",")' "$VERSIONS_FILE")
-            SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
-            SDK_VERSIONS="${SDK_TAGS},${SDK_BRANCHES}"
+            # Not fetching - use Inputs or existing versions.json
+            
+            # Get snarkOS versions
+            if [ -n "${{ inputs.snarkos_versions }}" ]; then
+              SNARKOS_VERSIONS="${{ inputs.snarkos_versions }}"
+            else
+              SNARKOS_TAGS=$(jq -r '.snarkos.tags | join(",")' "$VERSIONS_FILE")
+              SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
+              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
+              
+              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$SNARKOS_BRANCHES" ]; then
+                SNARKOS_VERSIONS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
+              else
+                SNARKOS_VERSIONS="$SNARKOS_TAGS"
+              fi
+            fi
+            
+            # Get SDK versions
+            if [ -n "${{ inputs.sdk_versions }}" ]; then
+              SDK_VERSIONS="${{ inputs.sdk_versions }}"
+            else
+              SDK_TAGS=$(jq -r '.sdk.tags | join(",")' "$VERSIONS_FILE")
+              SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
+              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
+              
+              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$SDK_BRANCHES" ]; then
+                SDK_VERSIONS="${SDK_TAGS},${SDK_BRANCHES}"
+              else
+                SDK_VERSIONS="$SDK_TAGS"
+              fi
+            fi
           fi
           
           # Convert to JSON arrays
@@ -236,8 +363,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -294,21 +419,32 @@ jobs:
 
       - name: Commit updated matrix
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add compatibility/matrix.json
-          git diff --staged --quiet || git commit -m "Update compatibility matrix [skip ci]"
-          
-          # Retry push with pull --rebase to handle concurrent updates
-          for i in 1 2 3 4 5; do
-            if git push; then
-              echo "✅ Push succeeded"
-              break
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add compatibility/matrix.json
+            git diff --staged --quiet || git commit -m "Update compatibility matrix [skip ci]"
+            
+            # Retry push with pull --rebase to handle concurrent updates
+            PUSH_SUCCESS=false
+            for i in 1 2 3 4 5; do
+              if git push; then
+                echo "✅ Push succeeded"
+                PUSH_SUCCESS=true
+                break
+              fi
+              echo "Push failed, attempt $i/5 - pulling and retrying..."
+              git pull --rebase origin ${{ github.ref_name }}
+              sleep $((i * 2))
+            done
+  
+            if [ "$PUSH_SUCCESS" = "false" ]; then
+              echo "❌ Failed to push changes after 5 attempts"
+              exit 1
             fi
-            echo "Push failed, attempt $i/5 - pulling and retrying..."
-            git pull --rebase origin ${{ github.ref_name }}
-            sleep $((i * 2))
-          done
+          else
+            echo "Skipping commit/push on pull request"
+          fi
 
       - name: Generate GitHub summary
         run: |
@@ -319,12 +455,15 @@ jobs:
           
           jq -r '.results[] | "| \(.snarkos_version) | \(.sdk_version) | \(if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) |"' compatibility/matrix.json >> $GITHUB_STEP_SUMMARY
 
-  # Package dashboard as downloadable artifact
-  # Note: GitHub Pages disabled because repo is private but Pages would be public
-  package-dashboard:
+  # Deploy dashboard to Cloudflare Pages
+  # Note: Skipped on PRs because secrets are not available for fork PRs
+  deploy-dashboard:
     needs: aggregate-results
-    if: always() && needs.aggregate-results.result == 'success'
+    if: always() && needs.aggregate-results.result == 'success' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -340,10 +479,17 @@ jobs:
           cp compatibility/dashboard/* dashboard-dist/
           cp compatibility/matrix.json dashboard-dist/
           cp compatibility/versions.json dashboard-dist/
-          echo "Dashboard packaged. To view locally:"
-          echo "  1. Download and extract this artifact"
-          echo "  2. Run: npx serve dashboard-dist"
-          echo "  3. Open http://localhost:3000"
+          echo "Dashboard prepared for deployment"
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: e2e-testing-reports
+          directory: dashboard-dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dashboard artifact
         uses: actions/upload-artifact@v5
@@ -351,4 +497,5 @@ jobs:
           name: compatibility-dashboard
           path: dashboard-dist/
           retention-days: 30
+
 

@@ -37,6 +37,8 @@ Cargo.lock
 
 local_build/
 
+# Dashboard build artifacts
+compatibility/dashboard-dist/
 
 *.ledger-*
 
