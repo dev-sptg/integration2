@@ -1,6 +1,12 @@
 {
-  "last_updated": "2025-12-03T16:09:28Z",
+  "last_updated": "2025-12-04T03:01:25Z",
   "results": [
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.10.0-testnet-rc",
+      "result": "pass",
+      "timestamp": "2025-12-04T02:55:26Z"
+    },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.10",
@@ -17,7 +23,19 @@
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-03T13:11:50Z"
+      "timestamp": "2025-12-04T03:01:05Z"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.9.13",
+      "result": "pass",
+      "timestamp": "2025-12-04T03:00:27Z"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.10.0-testnet-rc",
+      "result": "pass",
+      "timestamp": "2025-12-04T02:56:05Z"
     },
     {
       "snarkos_version": "v4.3.0",
@@ -35,13 +53,19 @@
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-03T13:11:14Z"
+      "timestamp": "2025-12-04T03:00:48Z"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.13",
+      "result": "pass",
+      "timestamp": "2025-12-04T03:00:17Z"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-03T16:09:18Z"
+      "timestamp": "2025-12-04T02:55:21Z"
     },
     {
       "snarkos_version": "v4.4.0",
@@ -59,7 +83,13 @@
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-03T13:10:42Z"
+      "timestamp": "2025-12-04T03:01:14Z"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.13",
+      "result": "pass",
+      "timestamp": "2025-12-04T03:00:36Z"
     }
   ]
 }
