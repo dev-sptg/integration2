@@ -1,11 +1,11 @@
 {
-  "last_updated": "2025-12-04T03:01:25Z",
+  "last_updated": "2025-12-05T03:01:28Z",
   "results": [
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-04T02:55:26Z"
+      "timestamp": "2025-12-05T02:56:14Z"
     },
     {
       "snarkos_version": "v4.2.2",
@@ -23,19 +23,19 @@
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-04T03:01:05Z"
+      "timestamp": "2025-12-05T02:59:51Z"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-04T03:00:27Z"
+      "timestamp": "2025-12-05T03:01:17Z"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-04T02:56:05Z"
+      "timestamp": "2025-12-05T02:55:59Z"
     },
     {
       "snarkos_version": "v4.3.0",
@@ -53,19 +53,19 @@
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-04T03:00:48Z"
+      "timestamp": "2025-12-05T03:00:35Z"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-04T03:00:17Z"
+      "timestamp": "2025-12-05T03:00:33Z"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-04T02:55:21Z"
+      "timestamp": "2025-12-05T02:55:39Z"
     },
     {
       "snarkos_version": "v4.4.0",
@@ -83,13 +83,13 @@
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.12",
       "result": "pass",
-      "timestamp": "2025-12-04T03:01:14Z"
+      "timestamp": "2025-12-05T03:01:08Z"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-04T03:00:36Z"
+      "timestamp": "2025-12-05T03:01:16Z"
     }
   ]
 }
