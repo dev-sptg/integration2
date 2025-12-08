@@ -1,0 +1,110 @@
+name: Setup DPS
+
+on:
+  workflow_call:
+    secrets:
+      REPO_ACCESS_TOKEN:
+        required: true
+    inputs:
+      ref:
+        description: 'Git ref (tag, branch, or commit) to checkout'
+        required: false
+        type: string
+        default: ''
+      artifact_suffix:
+        description: 'Suffix for artifact name (for matrix builds)'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      version:
+        description: 'DPS version (tag or commit hash)'
+        value: ${{ jobs.setup.outputs.version }}
+      cache_hit:
+        description: 'Whether the binary was restored from cache'
+        value: ${{ jobs.setup.outputs.cache_hit }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest-l
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      cache_hit: ${{ steps.binary-cache.outputs.cache-hit }}
+    steps:
+      - name: Determine cache key
+        id: version
+        run: |
+          REF="${{ inputs.ref }}"
+          if [ -z "$REF" ]; then
+            # No ref specified - get latest commit from default branch
+            REF="default-$(date +%Y%m%d)"
+          fi
+          echo "version=$REF" >> $GITHUB_OUTPUT
+          echo "Cache key: dps-binary-$REF"
+
+      # Try to restore cached binary first
+      - name: Check for cached DPS binary
+        id: binary-cache
+        uses: actions/cache@v4
+        with:
+          path: dps-binary
+          key: dps-binary-${{ steps.version.outputs.version }}
+
+      # If cache hit, skip the entire build process
+      - name: Use cached binary
+        if: steps.binary-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "✅ Using cached DPS binary for ${{ steps.version.outputs.version }}"
+          ls -la dps-binary/
+
+      # Only checkout if we need to build
+      - name: Checkout DPS repository
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v5
+        with:
+          repository: provableHQ/delegated-proving-service
+          path: dps
+          ref: ${{ inputs.ref || '' }}
+          fetch-depth: 1
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Set up Rust
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Set up Rust cache
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: dps
+          shared-key: dps-rust-${{ inputs.ref || 'default' }}
+          save-if: true
+
+      - name: Build DPS
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        env:
+          CARGO_INCREMENTAL: 0
+        run: |
+          echo "🔨 Building DPS ${{ steps.version.outputs.version }}..."
+          cd dps
+          cargo build --release
+
+      # Save binary to cache directory
+      - name: Prepare binary for caching
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p dps-binary
+          cp dps/target/release/prover dps-binary/
+          echo "Binary saved for caching"
+
+      # Upload artifact (from cache dir, works for both cached and fresh builds)
+      - name: Upload DPS binary
+        uses: actions/upload-artifact@v5
+        with:
+          name: dps-build${{ inputs.artifact_suffix }}
+          path: dps-binary/prover
+          retention-days: 1
+

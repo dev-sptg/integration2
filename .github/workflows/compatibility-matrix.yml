@@ -22,6 +22,11 @@ on:
         required: false
         type: string
         default: ''
+      dps_versions:
+        description: 'DPS versions (comma-separated tags/branches, e.g., "v0.17.0,v0.16.0,testnet")'
+        required: false
+        type: string
+        default: ''
   workflow_call:
     inputs:
       snarkos_versions:
@@ -31,6 +36,11 @@ on:
         default: ''
       sdk_versions:
         description: 'SDK versions (comma-separated)'
+        required: false
+        type: string
+        default: ''
+      dps_versions:
+        description: 'DPS versions (comma-separated)'
         required: false
         type: string
         default: ''
@@ -69,6 +79,7 @@ jobs:
 
           SNARKOS_VERSIONS=""
           SDK_VERSIONS=""
+          DPS_VERSIONS=""
 
           if [ "$SHOULD_FETCH" == "true" ]; then
             echo "Fetching latest versions from GitHub..."
@@ -103,11 +114,24 @@ jobs:
             fi
             echo "Found SDK tags: $SDK_TAGS"
             
+            # Fetch latest DPS tags
+            echo "Fetching DPS tags..."
+            if ! DPS_TAGS=$(gh api repos/provableHQ/delegated-proving-service/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
+              echo "❌ Failed to fetch DPS tags from GitHub API"
+              exit 1
+            fi
+            if [ -z "$DPS_TAGS" ]; then
+              echo "❌ No DPS tags returned from GitHub API"
+              exit 1
+            fi
+            echo "Found DPS tags: $DPS_TAGS"
+            
             # Update versions.json
             echo "Updating versions.json with found tags..."
-            jq --arg snarkos "$SNARKOS_TAGS" --arg sdk "$SDK_TAGS" '
+            jq --arg snarkos "$SNARKOS_TAGS" --arg sdk "$SDK_TAGS" --arg dps "$DPS_TAGS" '
               .snarkos.tags = ($snarkos | split(",")) |
-              .sdk.tags = ($sdk | split(","))
+              .sdk.tags = ($sdk | split(",")) |
+              .dps.tags = ($dps | split(","))
             ' "$VERSIONS_FILE" > "${VERSIONS_FILE}.tmp" && mv "${VERSIONS_FILE}.tmp" "$VERSIONS_FILE"
             
             # Commit and push (skip on PR)
@@ -148,6 +172,7 @@ jobs:
             if [ "$INCLUDE_BRANCHES" == "true" ]; then
               SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
               SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
+              DPS_BRANCHES=$(jq -r '.dps.branches | join(",")' "$VERSIONS_FILE")
               
               if [ -n "$SNARKOS_BRANCHES" ]; then
                 SNARKOS_TAGS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
@@ -155,10 +180,14 @@ jobs:
               if [ -n "$SDK_BRANCHES" ]; then
                 SDK_TAGS="${SDK_TAGS},${SDK_BRANCHES}"
               fi
+              if [ -n "$DPS_BRANCHES" ]; then
+                DPS_TAGS="${DPS_TAGS},${DPS_BRANCHES}"
+              fi
             fi
             
             SNARKOS_VERSIONS="$SNARKOS_TAGS"
             SDK_VERSIONS="$SDK_TAGS"
+            DPS_VERSIONS="$DPS_TAGS"
 
           else
             # Not fetching - use Inputs or existing versions.json
@@ -192,17 +221,34 @@ jobs:
                 SDK_VERSIONS="$SDK_TAGS"
               fi
             fi
+            
+            # Get DPS versions
+            if [ -n "${{ inputs.dps_versions }}" ]; then
+              DPS_VERSIONS="${{ inputs.dps_versions }}"
+            else
+              DPS_TAGS=$(jq -r '.dps.tags | join(",")' "$VERSIONS_FILE")
+              DPS_BRANCHES=$(jq -r '.dps.branches | join(",")' "$VERSIONS_FILE")
+              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
+              
+              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$DPS_BRANCHES" ]; then
+                DPS_VERSIONS="${DPS_TAGS},${DPS_BRANCHES}"
+              else
+                DPS_VERSIONS="$DPS_TAGS"
+              fi
+            fi
           fi
           
           # Convert to JSON arrays
           SNARKOS_ARRAY=$(echo "$SNARKOS_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
           SDK_ARRAY=$(echo "$SDK_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
+          DPS_ARRAY=$(echo "$DPS_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
           
           # Create matrix JSON (compact, single line for GITHUB_OUTPUT)
           MATRIX=$(jq -cn \
             --argjson snarkos "$SNARKOS_ARRAY" \
             --argjson sdk "$SDK_ARRAY" \
-            '{snarkos_version: $snarkos, sdk_version: $sdk}')
+            --argjson dps "$DPS_ARRAY" \
+            '{snarkos_version: $snarkos, sdk_version: $sdk, dps_version: $dps}')
           
           echo "Generated matrix:"
           echo "$MATRIX" | jq .
@@ -233,15 +279,30 @@ jobs:
       ref: ${{ matrix.sdk_version }}
       artifact_suffix: -${{ matrix.sdk_version }}
 
+  # Build all DPS versions in parallel
+  build-dps:
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        dps_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).dps_version }}
+    uses: ./.github/workflows/setup-dps.yml
+    secrets:
+      REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+    with:
+      ref: ${{ matrix.dps_version }}
+      artifact_suffix: -${{ matrix.dps_version }}
+
   # Test all combinations
   test-compatibility:
-    needs: [generate-matrix, build-snarkos, build-sdk]
+    needs: [generate-matrix, build-snarkos, build-sdk, build-dps]
     runs-on: ubuntu-latest-l
     strategy:
       fail-fast: false
       matrix:
         snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).snarkos_version }}
         sdk_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).sdk_version }}
+        dps_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).dps_version }}
     steps:
       - name: Checkout integration test repository
         uses: actions/checkout@v5
@@ -260,6 +321,12 @@ jobs:
           name: sdk-build-${{ matrix.sdk_version }}
           path: local_build/sdk
 
+      - name: Download DPS binary
+        uses: actions/download-artifact@v5
+        with:
+          name: dps-build-${{ matrix.dps_version }}
+          path: local_build/dps
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -276,6 +343,23 @@ jobs:
           chmod +x "$SNARKOS_BIN"
           "$SNARKOS_BIN" --version || true
           echo "SNARKOS_BINARY_PATH=${PWD}/${SNARKOS_BIN}" >> $GITHUB_ENV
+
+      - name: Setup DPS binary
+        run: |
+          # Handle artifact structure - file should be at local_build/dps/prover
+          if [ -f "local_build/dps/prover" ]; then
+            DPS_BIN="local_build/dps/prover"
+          else
+            # Try to find it anywhere in the directory
+            DPS_BIN=$(find local_build/dps -name "prover" -type f | head -1)
+            if [ -z "$DPS_BIN" ]; then
+              echo "Error: DPS binary (prover) not found in artifact" >&2
+              exit 1
+            fi
+          fi
+          chmod +x "$DPS_BIN"
+          "$DPS_BIN" --version || true
+          echo "DPS_BINARY_PATH=${PWD}/${DPS_BIN}" >> $GITHUB_ENV
 
       - name: Prepare SDK packages for integration tests
         run: |
@@ -317,11 +401,22 @@ jobs:
           chmod +x tests/setup/wait-for-devnet.sh
           ./tests/setup/wait-for-devnet.sh
 
+      - name: Start DPS service
+        run: |
+          chmod +x tests/setup/start-dps.sh
+          ./tests/setup/start-dps.sh
+
       - name: Run integration tests
         id: tests
         run: |
           chmod +x tests/run-all-tests.sh
           ./tests/run-all-tests.sh --dev --skip-build && echo "result=pass" >> $GITHUB_OUTPUT || echo "result=fail" >> $GITHUB_OUTPUT
+
+      - name: Stop DPS service
+        if: always()
+        run: |
+          chmod +x tests/setup/stop-dps.sh
+          ./tests/setup/stop-dps.sh || true
 
       - name: Stop snarkOS devnet
         if: always()
@@ -333,7 +428,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: test-report-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}
+          name: test-report-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}-dps-${{ matrix.dps_version }}
           path: test-results/
           retention-days: 7
 
@@ -344,15 +439,16 @@ jobs:
           echo '{
             "snarkos_version": "${{ matrix.snarkos_version }}",
             "sdk_version": "${{ matrix.sdk_version }}",
+            "dps_version": "${{ matrix.dps_version }}",
             "result": "${{ steps.tests.outputs.result || 'error' }}",
             "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-          }' > compatibility-results/result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}.json
+          }' > compatibility-results/result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}-${{ matrix.dps_version }}.json
 
       - name: Upload result artifact
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: compat-result-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}
+          name: compat-result-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}-dps-${{ matrix.dps_version }}
           path: compatibility-results/
           retention-days: 7
 
@@ -403,13 +499,13 @@ jobs:
               # Remove old entries that match new ones
               [.results[] | select(
                 . as $old |
-                ($new | map(select(.snarkos_version == $old.snarkos_version and .sdk_version == $old.sdk_version)) | length) == 0
+                ($new | map(select(.snarkos_version == $old.snarkos_version and .sdk_version == $old.sdk_version and .dps_version == $old.dps_version)) | length) == 0
               )] +
               # Add all new entries
               $new
             ) |
             # Sort by versions
-            .results |= sort_by([.snarkos_version, .sdk_version])
+            .results |= sort_by([.snarkos_version, .sdk_version, .dps_version])
           ')
           
           echo "$MERGED" | jq . > "$MATRIX_FILE"
@@ -450,10 +546,10 @@ jobs:
         run: |
           echo "## Compatibility Matrix Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| snarkOS | SDK | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| snarkOS | SDK | DPS | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----|-----|--------|" >> $GITHUB_STEP_SUMMARY
           
-          jq -r '.results[] | "| \(.snarkos_version) | \(.sdk_version) | \(if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) |"' compatibility/matrix.json >> $GITHUB_STEP_SUMMARY
+          jq -r '.results[] | "| \(.snarkos_version) | \(.sdk_version) | \(.dps_version) | \(if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) |"' compatibility/matrix.json >> $GITHUB_STEP_SUMMARY
 
   # Deploy dashboard to Cloudflare Pages
   # Note: Skipped on PRs because secrets are not available for fork PRs

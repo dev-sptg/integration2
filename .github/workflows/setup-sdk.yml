@@ -86,14 +86,15 @@ jobs:
         if: steps.build-cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'yarn'
           cache-dependency-path: sdk/yarn.lock
 
       - name: Install SDK dependencies
         if: steps.build-cache.outputs.cache-hit != 'true'
         working-directory: sdk
-        run: yarn install --frozen-lockfile
+        # TODO: switch back to run: yarn install --frozen-lockfile
+        run: yarn install --immutable --check-cache
 
       - name: Build SDK
         if: steps.build-cache.outputs.cache-hit != 'true'
