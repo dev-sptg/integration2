@@ -1,19 +1,25 @@
 {
   "snarkos": {
     "tags": [
-      "v4.4.0"
+      "v4.4.0",
+      "v4.3.0",
+      "v4.2.2"
     ],
     "branches": []
   },
   "sdk": {
     "tags": [
-      "v0.10.0-testnet-rc"
+      "v0.10.0-testnet-rc",
+      "v0.9.13",
+      "v0.9.12"
     ],
     "branches": []
   },
   "dps": {
     "tags": [
-      "v0.17.0"
+      "{\"message\":\"Not Found\"",
+      "\"documentation_url\":\"https://docs.github.com/rest/repos/repos#list-repository-tags\"",
+      "\"status\":\"404\"}"
     ],
     "branches": []
   },
