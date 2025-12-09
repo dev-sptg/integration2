@@ -77,65 +77,81 @@ jobs:
             SHOULD_FETCH="true"
           fi
 
-          SNARKOS_VERSIONS=""
-          SDK_VERSIONS=""
-          DPS_VERSIONS=""
-
-          if [ "$SHOULD_FETCH" == "true" ]; then
-            echo "Fetching latest versions from GitHub..."
-            TEST_LATEST_N=$(jq -r '.test_latest_n_tags // 3' "$VERSIONS_FILE")
-            INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
+          # Read component configuration
+          TEST_LATEST_N=$(jq -r '.matrix_config.test_latest_n_tags // 3' "$VERSIONS_FILE")
+          INCLUDE_BRANCHES=$(jq -r '.matrix_config.include_branches // false' "$VERSIONS_FILE")
             
             if [ "${{ inputs.test_latest_only }}" == "true" ]; then
               TEST_LATEST_N=1
             fi
             
-            # Fetch latest snarkOS tags
-            echo "Fetching snarkOS tags..."
-            if ! SNARKOS_TAGS=$(gh api repos/provableHQ/snarkOS/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
-              echo "❌ Failed to fetch snarkOS tags from GitHub API"
-              exit 1
-            fi
-            if [ -z "$SNARKOS_TAGS" ]; then
-              echo "❌ No snarkOS tags returned from GitHub API"
-              exit 1
-            fi
-            echo "Found snarkOS tags: $SNARKOS_TAGS"
+          # Get list of components from config
+          COMPONENT_KEYS=$(jq -r '.components | keys[]' "$VERSIONS_FILE")
+          
+          # Build matrix object dynamically
+          MATRIX_OBJ="{}"
+          
+          for COMPONENT in $COMPONENT_KEYS; do
+            COMPONENT_VERSIONS=""
+            VERSION_KEY="${COMPONENT}_version"
             
-            # Fetch latest SDK tags
-            echo "Fetching SDK tags..."
-            if ! SDK_TAGS=$(gh api repos/ProvableHQ/sdk/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
-              echo "❌ Failed to fetch SDK tags from GitHub API"
+            # Check for manual input override (handle known components explicitly)
+            # For new components, add input parameters to workflow and handle here
+            if [ "$COMPONENT" == "snarkos" ] && [ -n "${{ inputs.snarkos_versions }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.snarkos_versions }}"
+            elif [ "$COMPONENT" == "sdk" ] && [ -n "${{ inputs.sdk_versions }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.sdk_versions }}"
+            elif [ "$COMPONENT" == "dps" ] && [ -n "${{ inputs.dps_versions }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.dps_versions }}"
+            elif [ "$SHOULD_FETCH" == "true" ]; then
+              # Fetch from GitHub API
+              REPO=$(jq -r ".components[\"$COMPONENT\"].repo" "$VERSIONS_FILE")
+              echo "Fetching $COMPONENT tags from $REPO..."
+              
+              if ! COMPONENT_TAGS=$(gh api "repos/$REPO/tags" --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
+                echo "❌ Failed to fetch $COMPONENT tags from GitHub API"
               exit 1
             fi
-            if [ -z "$SDK_TAGS" ]; then
-              echo "❌ No SDK tags returned from GitHub API"
+              if [ -z "$COMPONENT_TAGS" ]; then
+                echo "❌ No $COMPONENT tags returned from GitHub API"
               exit 1
             fi
-            echo "Found SDK tags: $SDK_TAGS"
+              echo "Found $COMPONENT tags: $COMPONENT_TAGS"
+              
+              # Update versions.json
+              jq --arg comp "$COMPONENT" --arg tags "$COMPONENT_TAGS" \
+                '.components[$comp].tags = ($tags | split(","))' \
+                "$VERSIONS_FILE" > "${VERSIONS_FILE}.tmp" && mv "${VERSIONS_FILE}.tmp" "$VERSIONS_FILE"
+              
+              # Add branches if configured
+              if [ "$INCLUDE_BRANCHES" == "true" ]; then
+                COMPONENT_BRANCHES=$(jq -r ".components[\"$COMPONENT\"].branches | join(\",\")" "$VERSIONS_FILE")
+                if [ -n "$COMPONENT_BRANCHES" ]; then
+                  COMPONENT_TAGS="${COMPONENT_TAGS},${COMPONENT_BRANCHES}"
+                fi
+              fi
+              
+              COMPONENT_VERSIONS="$COMPONENT_TAGS"
+            else
+              # Read from config file
+              COMPONENT_TAGS=$(jq -r ".components[\"$COMPONENT\"].tags | join(\",\")" "$VERSIONS_FILE")
+              COMPONENT_BRANCHES=$(jq -r ".components[\"$COMPONENT\"].branches | join(\",\")" "$VERSIONS_FILE")
+              
+              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$COMPONENT_BRANCHES" ]; then
+                COMPONENT_VERSIONS="${COMPONENT_TAGS},${COMPONENT_BRANCHES}"
+              else
+                COMPONENT_VERSIONS="$COMPONENT_TAGS"
+              fi
+            fi
             
-            # Fetch latest DPS tags
-            echo "Fetching DPS tags..."
-            if ! DPS_TAGS=$(gh api repos/provableHQ/delegated-proving-service/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//'); then
-              echo "❌ Failed to fetch DPS tags from GitHub API"
-              exit 1
-            fi
-            if [ -z "$DPS_TAGS" ]; then
-              echo "❌ No DPS tags returned from GitHub API"
-              exit 1
-            fi
-            echo "Found DPS tags: $DPS_TAGS"
-            
-            # Update versions.json
-            echo "Updating versions.json with found tags..."
-            jq --arg snarkos "$SNARKOS_TAGS" --arg sdk "$SDK_TAGS" --arg dps "$DPS_TAGS" '
-              .snarkos.tags = ($snarkos | split(",")) |
-              .sdk.tags = ($sdk | split(",")) |
-              .dps.tags = ($dps | split(","))
-            ' "$VERSIONS_FILE" > "${VERSIONS_FILE}.tmp" && mv "${VERSIONS_FILE}.tmp" "$VERSIONS_FILE"
-            
-            # Commit and push (skip on PR)
-            if [ "${{ github.event_name }}" != "pull_request" ]; then
+            # Convert to JSON array and add to matrix object (use -c for compact output)
+            COMPONENT_ARRAY=$(echo "$COMPONENT_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -sc .)
+            VERSION_KEY="${COMPONENT}_version"
+            MATRIX_OBJ=$(echo "$MATRIX_OBJ" | jq -c --argjson arr "$COMPONENT_ARRAY" --arg key "$VERSION_KEY" ". + {(\$key): \$arr}")
+          done
+          
+          # Commit updated versions.json if fetching
+          if [ "$SHOULD_FETCH" == "true" ] && [ "${{ github.event_name }}" != "pull_request" ]; then
               git config --local user.email "github-actions[bot]@users.noreply.github.com"
               git config --local user.name "github-actions[bot]"
               git add "$VERSIONS_FILE"
@@ -164,96 +180,18 @@ jobs:
               else
                 echo "No changes to versions.json"
               fi
-            else
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
               echo "Skipping commit/push on pull request"
-            fi
-            
-            # Set versions for matrix (Add branches if configured)
-            if [ "$INCLUDE_BRANCHES" == "true" ]; then
-              SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
-              SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
-              DPS_BRANCHES=$(jq -r '.dps.branches | join(",")' "$VERSIONS_FILE")
-              
-              if [ -n "$SNARKOS_BRANCHES" ]; then
-                SNARKOS_TAGS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
-              fi
-              if [ -n "$SDK_BRANCHES" ]; then
-                SDK_TAGS="${SDK_TAGS},${SDK_BRANCHES}"
-              fi
-              if [ -n "$DPS_BRANCHES" ]; then
-                DPS_TAGS="${DPS_TAGS},${DPS_BRANCHES}"
-              fi
-            fi
-            
-            SNARKOS_VERSIONS="$SNARKOS_TAGS"
-            SDK_VERSIONS="$SDK_TAGS"
-            DPS_VERSIONS="$DPS_TAGS"
-
-          else
-            # Not fetching - use Inputs or existing versions.json
-            
-            # Get snarkOS versions
-            if [ -n "${{ inputs.snarkos_versions }}" ]; then
-              SNARKOS_VERSIONS="${{ inputs.snarkos_versions }}"
-            else
-              SNARKOS_TAGS=$(jq -r '.snarkos.tags | join(",")' "$VERSIONS_FILE")
-              SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
-              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
-              
-              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$SNARKOS_BRANCHES" ]; then
-                SNARKOS_VERSIONS="${SNARKOS_TAGS},${SNARKOS_BRANCHES}"
-              else
-                SNARKOS_VERSIONS="$SNARKOS_TAGS"
-              fi
-            fi
-            
-            # Get SDK versions
-            if [ -n "${{ inputs.sdk_versions }}" ]; then
-              SDK_VERSIONS="${{ inputs.sdk_versions }}"
-            else
-              SDK_TAGS=$(jq -r '.sdk.tags | join(",")' "$VERSIONS_FILE")
-              SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
-              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
-              
-              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$SDK_BRANCHES" ]; then
-                SDK_VERSIONS="${SDK_TAGS},${SDK_BRANCHES}"
-              else
-                SDK_VERSIONS="$SDK_TAGS"
-              fi
-            fi
-            
-            # Get DPS versions
-            if [ -n "${{ inputs.dps_versions }}" ]; then
-              DPS_VERSIONS="${{ inputs.dps_versions }}"
-            else
-              DPS_TAGS=$(jq -r '.dps.tags | join(",")' "$VERSIONS_FILE")
-              DPS_BRANCHES=$(jq -r '.dps.branches | join(",")' "$VERSIONS_FILE")
-              INCLUDE_BRANCHES=$(jq -r '.include_branches // true' "$VERSIONS_FILE")
-              
-              if [ "$INCLUDE_BRANCHES" == "true" ] && [ -n "$DPS_BRANCHES" ]; then
-                DPS_VERSIONS="${DPS_TAGS},${DPS_BRANCHES}"
-              else
-                DPS_VERSIONS="$DPS_TAGS"
-              fi
-            fi
           fi
           
-          # Convert to JSON arrays
-          SNARKOS_ARRAY=$(echo "$SNARKOS_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
-          SDK_ARRAY=$(echo "$SDK_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
-          DPS_ARRAY=$(echo "$DPS_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -s .)
-          
-          # Create matrix JSON (compact, single line for GITHUB_OUTPUT)
-          MATRIX=$(jq -cn \
-            --argjson snarkos "$SNARKOS_ARRAY" \
-            --argjson sdk "$SDK_ARRAY" \
-            --argjson dps "$DPS_ARRAY" \
-            '{snarkos_version: $snarkos, sdk_version: $sdk, dps_version: $dps}')
+          # Output matrix
+          # Ensure matrix is compact JSON (single line) for GITHUB_OUTPUT
+          MATRIX_COMPACT=$(echo "$MATRIX_OBJ" | jq -c .)
           
           echo "Generated matrix:"
-          echo "$MATRIX" | jq .
+          echo "$MATRIX_OBJ" | jq .
           
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "matrix=$MATRIX_COMPACT" >> $GITHUB_OUTPUT
 
   # Build all snarkOS versions in parallel
   build-snarkos:
@@ -436,19 +374,37 @@ jobs:
         if: always()
         run: |
           mkdir -p compatibility-results
-          echo '{
-            "snarkos_version": "${{ matrix.snarkos_version }}",
-            "sdk_version": "${{ matrix.sdk_version }}",
-            "dps_version": "${{ matrix.dps_version }}",
-            "result": "${{ steps.tests.outputs.result || 'error' }}",
-            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-          }' > compatibility-results/result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}-${{ matrix.dps_version }}.json
+          
+          # Build result JSON with all component versions from matrix
+          # Only include versions that are actually set (not empty)
+          RESULT_JSON=$(jq -n \
+            --arg result "${{ steps.tests.outputs.result || 'error' }}" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg snarkos "${{ matrix.snarkos_version }}" \
+            --arg sdk "${{ matrix.sdk_version }}" \
+            --arg dps "${{ matrix.dps_version }}" \
+            '{
+              snarkos_version: $snarkos,
+              sdk_version: $sdk,
+              result: $result,
+              timestamp: $timestamp
+            } + (if $dps != "" and $dps != "null" then {dps_version: $dps} else {} end)')
+          
+          # Build filename from component versions (only include non-empty ones)
+          FILENAME_PARTS="result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}"
+          if [ -n "${{ matrix.dps_version }}" ] && [ "${{ matrix.dps_version }}" != "null" ]; then
+            FILENAME_PARTS="${FILENAME_PARTS}-${{ matrix.dps_version }}"
+          fi
+          FILENAME="${FILENAME_PARTS}.json"
+          
+          echo "$RESULT_JSON" | jq . > "compatibility-results/$FILENAME"
+          echo "Saved result to compatibility-results/$FILENAME"
 
       - name: Upload result artifact
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: compat-result-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}-dps-${{ matrix.dps_version }}
+          name: compat-result-${{ matrix.snarkos_version }}-${{ matrix.sdk_version }}-${{ matrix.dps_version }}
           path: compatibility-results/
           retention-days: 7
 
@@ -476,12 +432,16 @@ jobs:
         run: |
           # Read existing matrix or create new one
           MATRIX_FILE="compatibility/matrix.json"
+          VERSIONS_FILE="compatibility/versions.json"
           
           if [ -f "$MATRIX_FILE" ]; then
             EXISTING=$(cat "$MATRIX_FILE")
           else
             EXISTING='{"last_updated": null, "results": []}'
           fi
+          
+          # Get component list from config
+          COMPONENT_KEYS=$(jq -r '.components | keys[]' "$VERSIONS_FILE")
           
           # Collect all new results
           NEW_RESULTS="[]"
@@ -491,22 +451,24 @@ jobs:
             fi
           done
           
+          # Build sort keys array for jq
+          SORT_KEYS_ARRAY="[]"
+          for COMPONENT in $COMPONENT_KEYS; do
+            VERSION_KEY="${COMPONENT}_version"
+            SORT_KEYS_ARRAY=$(echo "$SORT_KEYS_ARRAY" | jq --arg key "$VERSION_KEY" '. + [$key]')
+          done
+          
           # Merge with existing results (update existing, add new)
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          MERGED=$(echo "$EXISTING" | jq --argjson new "$NEW_RESULTS" --arg ts "$TIMESTAMP" '
-            .last_updated = $ts |
-            .results = (
-              # Remove old entries that match new ones
-              [.results[] | select(
-                . as $old |
-                ($new | map(select(.snarkos_version == $old.snarkos_version and .sdk_version == $old.sdk_version and .dps_version == $old.dps_version)) | length) == 0
-              )] +
-              # Add all new entries
-              $new
-            ) |
-            # Sort by versions
-            .results |= sort_by([.snarkos_version, .sdk_version, .dps_version])
-          ')
+          
+          # Merge: keep old results that have all versions and don't match new ones, then add new results
+          JQ_FILTER='.last_updated = $ts | .results = ([.results[] | . as $old | if ($sort_keys | all(. as $key | $old[$key] != null and $old[$key] != "" and $old[$key] != "null")) then if ($new | map(. as $n | $sort_keys | all(. as $key | $old[$key] == $n[$key])) | any) then empty else $old end else empty end] + $new) | .results |= sort_by([$sort_keys[] as $key | .[$key]])'
+          
+          MERGED=$(echo "$EXISTING" | jq \
+            --argjson new "$NEW_RESULTS" \
+            --argjson sort_keys "$SORT_KEYS_ARRAY" \
+            --arg ts "$TIMESTAMP" \
+            "$JQ_FILTER")
           
           echo "$MERGED" | jq . > "$MATRIX_FILE"
           
@@ -544,12 +506,60 @@ jobs:
 
       - name: Generate GitHub summary
         run: |
+          VERSIONS_FILE="compatibility/versions.json"
+          MATRIX_FILE="compatibility/matrix.json"
+          
+          # Get component list and build header dynamically
+          COMPONENT_KEYS=$(jq -r '.components | keys[]' "$VERSIONS_FILE")
+          
+          # Build header row
+          HEADER_PARTS=""
+          SEPARATOR_PARTS=""
+          for COMPONENT in $COMPONENT_KEYS; do
+            LABEL=$(jq -r ".components[\"$COMPONENT\"].label" "$VERSIONS_FILE")
+            HEADER_PARTS="${HEADER_PARTS}| ${LABEL} "
+            SEPARATOR_PARTS="${SEPARATOR_PARTS}|---"
+          done
+          HEADER="${HEADER_PARTS}| Result |"
+          SEPARATOR="${SEPARATOR_PARTS}|--------|"
+          
           echo "## Compatibility Matrix Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| snarkOS | SDK | DPS | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-----|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "$HEADER" >> $GITHUB_STEP_SUMMARY
+          echo "$SEPARATOR" >> $GITHUB_STEP_SUMMARY
           
-          jq -r '.results[] | "| \(.snarkos_version) | \(.sdk_version) | \(.dps_version) | \(if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) |"' compatibility/matrix.json >> $GITHUB_STEP_SUMMARY
+          # Build jq expression to extract versions dynamically
+          # Create array of version keys for each component
+          VERSION_KEYS_ARRAY="[]"
+          for COMPONENT in $COMPONENT_KEYS; do
+            VERSION_KEY="${COMPONENT}_version"
+            VERSION_KEYS_ARRAY=$(echo "$VERSION_KEYS_ARRAY" | jq --arg key "$VERSION_KEY" '. + [$key]')
+          done
+          
+          # Generate table rows using jq
+          # Handle null, empty, or missing values by showing "-"
+          jq -r --argjson keys "$VERSION_KEYS_ARRAY" '.results[] | 
+            "| " + 
+            ([$keys[] as $k | (if .[$k] and .[$k] != "null" and .[$k] != "" then .[$k] else "-" end)] | join(" | ")) + 
+            " | " + 
+            (if .result == "pass" then "✅" elif .result == "fail" then "❌" else "⚠️" end) + 
+            " |"
+          ' "$MATRIX_FILE" >> $GITHUB_STEP_SUMMARY
+
+      - name: Prepare dashboard for download
+        run: |
+          mkdir -p dashboard-dist
+          cp compatibility/dashboard/* dashboard-dist/
+          cp compatibility/matrix.json dashboard-dist/
+          cp compatibility/versions.json dashboard-dist/
+          echo "Dashboard prepared for download"
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: compatibility-dashboard
+          path: dashboard-dist/
+          retention-days: 30
 
   # Deploy dashboard to Cloudflare Pages
   # Note: Skipped on PRs because secrets are not available for fork PRs
@@ -586,12 +596,5 @@ jobs:
           projectName: e2e-testing-reports
           directory: dashboard-dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload dashboard artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: compatibility-dashboard
-          path: dashboard-dist/
-          retention-days: 30
 
 

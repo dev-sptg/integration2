@@ -171,12 +171,18 @@ main {
   letter-spacing: 0.05em;
 }
 
+#matrices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
 .matrix-container {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 2.5rem;
 }
 
 .matrix-header {
@@ -341,10 +347,20 @@ td.unknown {
 .history-versions {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .history-versions span {
   color: var(--text-secondary);
+  margin: 0 0.25rem;
+}
+
+.history-versions strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .history-result {
@@ -400,6 +416,19 @@ footer a {
 
 footer a:hover {
   color: var(--accent-purple);
+}
+
+#footer-links p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#footer-links p::before,
+#footer-links p::after {
+  content: '';
 }
 
 .copyright {
