@@ -1,60 +1,130 @@
 {
-  "last_updated": "2025-12-12T02:53:56Z",
+  "last_updated": "2025-12-12T08:40:23Z",
   "results": [
     {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.10.0-testnet-rc",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:34:58Z",
+      "dps_version": "v0.16.0"
+    },
+    {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-09T14:43:38Z",
+      "timestamp": "2025-12-12T08:35:04Z",
       "dps_version": "v0.16.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-09T14:44:11Z",
+      "timestamp": "2025-12-12T08:35:07Z",
+      "dps_version": "v0.16.0"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:39:15Z",
+      "dps_version": "v0.16.0"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:38:56Z",
+      "dps_version": "v0.16.0"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:39:43Z",
+      "dps_version": "v0.16.0"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.9.13",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:40:03Z",
       "dps_version": "v0.16.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-09T14:49:17Z",
+      "timestamp": "2025-12-12T08:39:33Z",
       "dps_version": "v0.16.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-09T14:49:05Z",
+      "timestamp": "2025-12-12T08:39:38Z",
       "dps_version": "v0.16.0"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.10.0-testnet-rc",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:34:20Z",
+      "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-09T14:43:36Z",
+      "timestamp": "2025-12-12T08:34:20Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2025-12-09T14:44:04Z",
+      "timestamp": "2025-12-12T08:35:10Z",
+      "dps_version": "v0.17.0"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:39:23Z",
+      "dps_version": "v0.17.0"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:39:34Z",
+      "dps_version": "v0.17.0"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.12",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:38:55Z",
+      "dps_version": "v0.17.0"
+    },
+    {
+      "snarkos_version": "v4.2.2",
+      "sdk_version": "v0.9.13",
+      "result": "pass",
+      "timestamp": "2025-12-12T08:38:50Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-09T14:48:36Z",
+      "timestamp": "2025-12-12T08:39:25Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2025-12-09T14:49:12Z",
+      "timestamp": "2025-12-12T08:40:13Z",
       "dps_version": "v0.17.0"
     }
   ]
