@@ -64,8 +64,11 @@ jobs:
       - name: Generate version matrix
         id: set-matrix
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT (if available) for private repos like DPS; fall back to GITHUB_TOKEN.
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN != '' && secrets.MY_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
           # Read versions from config file
           VERSIONS_FILE="compatibility/versions.json"
           
@@ -145,7 +148,7 @@ jobs:
             fi
             
             # Convert to JSON array and add to matrix object (use -c for compact output)
-            COMPONENT_ARRAY=$(echo "$COMPONENT_VERSIONS" | tr ',' '\n' | grep -v '^$' | jq -R . | jq -sc .)
+            COMPONENT_ARRAY=$(jq -nc --arg s "$COMPONENT_VERSIONS" '$s | split(",") | map(select(length > 0))')
             VERSION_KEY="${COMPONENT}_version"
             MATRIX_OBJ=$(echo "$MATRIX_OBJ" | jq -c --argjson arr "$COMPONENT_ARRAY" --arg key "$VERSION_KEY" ". + {(\$key): \$arr}")
           done
