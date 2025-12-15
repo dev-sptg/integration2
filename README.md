@@ -1,6 +1,6 @@
 # Integration Test Repository
 
-**[View E2E Testing Reports Dashboard](https://main.e2e-testing-reports.pages.dev/)**
+**[View E2E Testing Reports Dashboard](https://e2e-testing-reports.pages.dev/)**
 
 Integration test framework for ProvableHQ's components. Tests multiple repositories together to ensure compatibility and correctness.
 
