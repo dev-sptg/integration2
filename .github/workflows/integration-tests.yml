@@ -105,6 +105,30 @@ jobs:
           chmod +x tests/setup/stop-devnet.sh
           ./tests/setup/stop-devnet.sh || true
 
+      - name: Stop DPS
+        if: always()
+        run: |
+          chmod +x tests/setup/stop-dps.sh
+          ./tests/setup/stop-dps.sh || true
+
+      - name: Upload snarkOS logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: snarkos-logs
+          path: /tmp/snarkos-devnet-logs/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload DPS logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: dps-logs
+          path: /tmp/dps-logs/
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v5

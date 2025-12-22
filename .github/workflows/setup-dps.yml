@@ -64,7 +64,7 @@ jobs:
         with:
           repository: provableHQ/delegated-proving-service
           path: dps
-          ref: ${{ inputs.ref || '' }}
+          ref: "feat/test-flag"
           fetch-depth: 1
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
 
@@ -90,7 +90,7 @@ jobs:
         run: |
           echo "🔨 Building DPS ${{ steps.version.outputs.version }}..."
           cd dps
-          cargo build --release
+          cargo build --release --features test
 
       # Save binary to cache directory
       - name: Prepare binary for caching

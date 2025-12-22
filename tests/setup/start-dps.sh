@@ -15,6 +15,8 @@ PID_FILE="/tmp/dps.pid"
 # Priority: 1) DPS_BINARY_PATH env var, 2) local_build paths
 if [ -n "$DPS_BINARY_PATH" ] && [ -f "$DPS_BINARY_PATH" ]; then
     DPS_BIN="$DPS_BINARY_PATH"
+elif [ -f "$INTEGRATION_ROOT/local_build/dps/target/release/prover" ]; then
+    DPS_BIN="$INTEGRATION_ROOT/local_build/dps/target/release/prover"
 elif [ -f "$INTEGRATION_ROOT/local_build/dps/bin/prover" ]; then
     DPS_BIN="$INTEGRATION_ROOT/local_build/dps/bin/prover"
 elif [ -f "$INTEGRATION_ROOT/local_build/dps/prover" ]; then
@@ -23,6 +25,7 @@ else
     echo "Error: DPS binary (prover) not found." >&2
     echo "Searched locations:" >&2
     echo "  - \$DPS_BINARY_PATH: ${DPS_BINARY_PATH:-not set}" >&2
+    echo "  - $INTEGRATION_ROOT/local_build/dps/target/release/prover" >&2
     echo "  - $INTEGRATION_ROOT/local_build/dps/bin/prover" >&2
     echo "  - $INTEGRATION_ROOT/local_build/dps/prover" >&2
     exit 1
@@ -49,8 +52,8 @@ fi
 echo "Starting DPS..."
 echo "   Address: 0.0.0.0:$DPS_PORT"
 echo "   Network: testnet"
-echo "   Endpoint: http://localhost:3030/v2"
-echo "   Programs endpoint: http://localhost:3030/v2"
+echo "   Endpoint: http://localhost:3030"
+echo "   Programs endpoint: http://localhost:3030"
 echo "   Logs: $LOG_DIR/dps.log"
 
 LOG_FILE="$LOG_DIR/dps.log"
@@ -60,8 +63,8 @@ cd "$(dirname "$DPS_BIN")"
 nohup "$DPS_BIN" \
     --addr "0.0.0.0:$DPS_PORT" \
     --network testnet \
-    --endpoint "http://localhost:3030/v2" \
-    --programs-endpoint "http://localhost:3030/v2" \
+    --endpoint "http://localhost:3030" \
+    --programs-endpoint "http://localhost:3030" \
     --rayon-threads 4 \
     --tokio-worker-threads 4 \
     --tokio-blocking-threads 8 \
@@ -81,6 +84,8 @@ echo "Use './tests/setup/stop-dps.sh' to stop DPS"
 sleep 2
 if ! ps -p "$DPS_PID" > /dev/null 2>&1; then
     echo "Error: DPS process died immediately. Check logs: $LOG_FILE" >&2
+    echo "   Logs:"
+    echo "   $(cat $LOG_FILE)"
     rm -f "$PID_FILE"
     exit 1
 fi

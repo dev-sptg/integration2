@@ -19,9 +19,10 @@ const INTEGRATION_ROOT = process.env.INTEGRATION_ROOT || join(__dirname, '..');
 const TESTS_DIR = join(__dirname, 'integration');
 const REPORT_DIR = join(INTEGRATION_ROOT, 'test-results');
 
-const testSuites = ['sdk-devnet'];
+const testSuites = ['sdk-devnet', 'dps-devnet'];
 const suiteTimeouts = {
-    'sdk-devnet': 60 * 60 * 1000 // 60 minutes
+    'sdk-devnet': 60 * 60 * 1000, // 60 minutes
+    'dps-devnet': 60 * 60 * 1000  // 60 minutes
 };
 
 const report = new TestReport();

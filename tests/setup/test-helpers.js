@@ -347,6 +347,101 @@ export function verifySnarkOSBinary(snarkosPath) {
 }
 
 /**
+ * Find binary in multiple possible locations
+ * @param {string[]} possiblePaths - Array of paths to check
+ * @param {string} envVar - Environment variable name to check first
+ * @returns {string|null} - Path to binary or null if not found
+ */
+export function findBinary(possiblePaths, envVar = null) {
+    // Check env var first
+    if (envVar && process.env[envVar] && existsSync(process.env[envVar])) {
+        return process.env[envVar];
+    }
+    
+    // Check each path
+    for (const p of possiblePaths) {
+        if (p && existsSync(p)) {
+            return p;
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Wait for a service to be ready by polling an endpoint
+ * @param {Object} options - Configuration options
+ * @param {string} options.url - URL to poll
+ * @param {string} options.name - Service name for logging
+ * @param {number} options.timeout - Timeout in milliseconds (default: 30000)
+ * @param {number} options.interval - Poll interval in milliseconds (default: 1000)
+ * @param {function} options.validate - Optional validation function (response) => boolean
+ * @returns {Promise<boolean>}
+ */
+export async function waitForService({ url, name, timeout = 30000, interval = 1000, validate = null }) {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeout) {
+        try {
+            const response = await fetch(url);
+            const isValid = validate ? validate(response) : response.ok;
+            if (isValid) {
+                console.log(`  ${name} is ready`);
+                return true;
+            }
+        } catch (e) {
+            // Service not ready yet, continue polling
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+    }
+    throw new Error(`${name} did not become ready within ${timeout}ms`);
+}
+
+/**
+ * Start a service using a shell script
+ * @param {Object} options - Configuration options
+ * @param {string} options.script - Path to start script
+ * @param {string} options.name - Service name for logging
+ * @param {Object} options.env - Additional environment variables
+ * @returns {boolean} - Whether service was started (false if already running)
+ */
+export function startService({ script, name, env = {} }) {
+    console.log(`  Starting ${name}...`);
+    execSync(script, { 
+        stdio: 'inherit',
+        env: { ...process.env, ...env }
+    });
+    return true;
+}
+
+/**
+ * Stop a service using a shell script
+ * @param {string} script - Path to stop script
+ * @param {string} name - Service name for logging
+ */
+export function stopService(script, name) {
+    try {
+        execSync(script, { stdio: 'inherit' });
+    } catch (e) {
+        console.warn(`  ${name} cleanup failed: ${e.message}`);
+    }
+}
+
+/**
+ * Check if a service is accessible via HTTP
+ * @param {string} url - URL to check
+ * @returns {boolean}
+ */
+export function isServiceAccessible(url) {
+    try {
+        execSync(`curl -s -f "${url}" > /dev/null 2>&1`);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * Save test report to JSON file
  */
 export function saveReport(report, outputPath) {
