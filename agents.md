@@ -4,213 +4,299 @@ This document provides technical information about the integration test reposito
 
 ## Repository Purpose
 
-Integration test framework for ProvableHQ's components. Aims to be an e2e test for browser extension wallet and its dependencies. Tests multiple repositories together to ensure compatibility and correctness. Currently validates that snarkOS and SDK repositories work together.
+Integration test framework for ProvableHQ's components. Aims to be an e2e test for browser extension wallet and its dependencies. Tests multiple repositories together to ensure compatibility and correctness. Validates that snarkOS, SDK, and DPS (Delegated Proving Service) repositories work together.
 
 ## Repository Coverage
 
 - [snarkOS](https://github.com/provableHQ/snarkOS) - Decentralized OS for zero-knowledge applications
 - [SDK](https://github.com/ProvableHQ/sdk) - Aleo SDK for TypeScript/JavaScript
+- [DPS](https://github.com/provableHQ/delegated-proving-service) (private) - Delegated Proving Service
 - Record Scanning Service (private) - Record scanning functionality
 - Provapipe (private) - Pipeline infrastructure
 
 ## Repository Structure
 
 ```
-├── .github/workflows/integration-tests.yml  # GitHub Actions workflow
-├── README.md                               # Human documentation
-├── agents.md                               # This file
+├── .github/workflows/
+│   ├── integration-tests.yml         # Main integration test workflow
+│   ├── compatibility-matrix.yml      # Multi-version compatibility testing
+│   ├── matrix-on-release.yml         # Trigger tests on releases
+│   ├── setup-snarkos.yml             # snarkOS build workflow
+│   ├── setup-sdk.yml                 # SDK build workflow
+│   ├── setup-dps.yml                 # DPS build workflow
+│   ├── setup-provapipe.yml           # Provapipe build (disabled)
+│   └── setup-record-scanning-service.yml  # RSS build (disabled)
+├── compatibility/
+│   ├── dashboard/                    # Web dashboard for results
+│   │   ├── index.html
+│   │   ├── app.js
+│   │   └── styles.css
+│   ├── matrix.json                   # Compatibility test results
+│   ├── versions.json                 # Component version configuration
+│   └── test-deploy.sh                # Dashboard deployment script
 ├── tests/
-│   ├── integration/                        # Integration test suites
-│   │   └── sdk-devnet/                     # Full devnet integration
-│   ├── setup/                              # Setup scripts
-│   │   ├── install-packages.sh             # Build and prepare local packages
-│   │   ├── start-devnet.sh                 # Start local snarkOS devnet
-│   │   ├── stop-devnet.sh                  # Stop devnet
-│   │   ├── wait-for-devnet.sh              # Wait for devnet readiness
-│   │   └── test-helpers.js                 # Test utilities and reporting
-│   ├── programs/                           # Test Aleo programs
-│   ├── run-all-tests.sh                    # Master test runner
-│   └── run-all-tests.js                    # Test orchestrator
-└── .gitignore                              # Git ignores
+│   ├── integration/
+│   │   ├── sdk-devnet/               # SDK + devnet integration tests
+│   │   └── dps-devnet/               # DPS delegated proving tests
+│   ├── setup/
+│   │   ├── install-packages.sh       # Build and prepare local packages
+│   │   ├── start-devnet.sh           # Start local snarkOS devnet
+│   │   ├── stop-devnet.sh            # Stop devnet
+│   │   ├── start-dps.sh              # Start DPS service
+│   │   ├── stop-dps.sh               # Stop DPS service
+│   │   ├── wait-for-devnet.sh        # Wait for devnet readiness
+│   │   └── test-helpers.js           # Test utilities and reporting
+│   ├── programs/                     # Test Aleo programs
+│   ├── run-all-tests.sh              # Master test runner (shell)
+│   └── run-all-tests.js              # Test orchestrator (Node.js)
+├── README.md                         # Human documentation
+└── agents.md                         # This file
 ```
 
-## Workflow Configuration
+## Workflows Overview
+
+### 1. Integration Tests (`integration-tests.yml`)
 
 **Triggers**: Push/PR to `master` branch
 
-**Architecture**: Multi-job workflow with artifact passing and proper caching
+**Purpose**: Run integration tests using latest (default branch) of all components
 
-### Build Jobs (Parallel Execution)
-1. **`snarkos-build`**:
-   - Clones snarkOS repository (shallow)
-   - Sets up Rust toolchain with Swatinem/rust-cache@v2
-   - Builds release binary with `RUSTFLAGS="-C target-cpu=native"`
-   - Uploads entire repository as artifact (includes built binary)
+**Jobs**:
+1. **snarkos-build**: Build snarkOS binary (parallel)
+2. **sdk-build**: Build SDK packages (parallel)
+3. **integration-tests**: Run tests against devnet
 
-2. **`sdk-build`**:
-   - Clones SDK repository (shallow)
-   - Sets up Rust toolchain (for WASM compilation)
-   - Installs wasm-pack
-   - Sets up Node.js 20.x with yarn cache
-   - Installs dependencies (frozen lockfile)
-   - **Builds WASM module** (`sdk/wasm/yarn build` - requires Rust)
-   - **Builds SDK packages** (`sdk/sdk/yarn build`)
-   - Uploads entire repository as artifact (includes built packages)
+**Test Suites**: `sdk-devnet`, `dps-devnet`
 
-3. **`record-scanning-service-build`** (private) - **COMMENTED OUT**:
-   - Requires `MY_GITHUB_TOKEN` and `DEPENDENCY_CUSNARK_SSH_KEY` secrets
-   - Builds record scanning service from private repo
-   - Currently disabled for milestone 1
+### 2. Compatibility Matrix (`compatibility-matrix.yml`)
 
-4. **`provapipe-build`** (private) - **COMMENTED OUT**:
-   - Requires `MY_GITHUB_TOKEN` secret
-   - Builds provapipe from private repo
-   - Currently disabled for milestone 1
+**Triggers**: Nightly (02:13 UTC), PR, manual, workflow_call
 
-### Integration Tests Job (`ubuntu-latest-m`)
-**Dependencies**: Waits for `snarkos-build` and `sdk-build` to complete
+**Purpose**: Test all combinations of component versions for compatibility
 
-**Execution Flow**:
-1. **Checkout** integration test repository
-2. **Download Artifacts** to `local_build/` directory:
-   - `local_build/snarkOS/` (with built binary)
-   - `local_build/sdk/` (with built WASM & packages)
-3. **Setup Environment**:
-   - Node.js 20.x with yarn cache
-   - Make snarkOS binary executable and verify version
-4. **Prepare SDK Packages**:
-   - Run `install-packages.sh` to create local package versions
-   - Creates tarballs with `-local-<commit>` version markers
-5. **DevNet Lifecycle**:
-   - Start 4-validator devnet (`start-devnet.sh`)
-   - Wait for readiness (`wait-for-devnet.sh` - checks REST API)
-   - Run integration tests
-   - Stop devnet in cleanup (always runs, even on failure)
-6. **Test Execution**:
-   - Runs test suite: `sdk-devnet`
-   - Non-blocking: Uses `|| true` to collect all results
-7. **Reporting**:
-   - Uploads test reports as artifacts (7-day retention)
-   - Posts GitHub step summary with test results
+**Jobs**:
+1. **generate-matrix**: Read versions.json, optionally fetch latest tags from GitHub
+2. **build-snarkos**: Build all snarkOS versions (parallel matrix)
+3. **build-sdk**: Build all SDK versions (parallel matrix)
+4. **build-dps**: Build all DPS versions (parallel matrix)
+5. **test-compatibility**: Test all combinations (matrix of all versions)
+6. **aggregate-results**: Collect results into matrix.json
+7. **deploy-dashboard**: Deploy to Cloudflare Pages
 
-**Key Features**:
-- **Parallel builds**: All components build simultaneously
-- **Artifact reuse**: Built binaries/packages passed between jobs
-- **Smart caching**: Rust cache (Swatinem) and yarn cache (actions/setup-node)
-- **DevNet automation**: Full devnet lifecycle management in CI
-- **Non-blocking tests**: Pipeline doesn't fail, collects all results
-- **Local package verification**: Tests use locally built packages with version markers
-- **Fast iteration**: `--quick --dev` flags skip redundant cloning/building
+**Version Configuration** (`compatibility/versions.json`):
+```json
+{
+  "components": {
+    "snarkos": { "repo": "provableHQ/snarkOS", "tags": ["v4.4.0", ...] },
+    "sdk": { "repo": "ProvableHQ/sdk", "tags": ["v0.9.14", ...] },
+    "dps": { "repo": "provableHQ/delegated-proving-service", "tags": ["v0.18.1", ...] }
+  },
+  "matrix_config": {
+    "test_latest_n_tags": 3,
+    "include_branches": false
+  }
+}
+```
 
-**Action Versions**: 
-- actions/checkout@v5
-- actions/setup-node@v6
-- actions/upload-artifact@v4
-- actions/download-artifact@v4
-- actions-rust-lang/setup-rust-toolchain@v1
-- Swatinem/rust-cache@v2
+### 3. Matrix on Release (`matrix-on-release.yml`)
 
-**GitHub Runners**:
-- Uses `ubuntu-latest-m` (paid GitHub hosted runner) for all jobs
-- Provides better performance than standard runners
+**Triggers**: repository_dispatch (snarkos-release, sdk-release), manual
 
-Use Context7 MCP to verify latest versions when updating workflows
+**Purpose**: Automatically test new releases against latest versions of other components
+
+## Build Workflows (setup-*.yml)
+
+### setup-snarkos.yml
+- **Runner**: `ubuntu-latest-l`
+- **Caching**: Binary cache via `actions/cache@v4` (key: `snarkos-binary-{version}`)
+- **Rust cache**: `Swatinem/rust-cache@v2` (shared-key: `snarkos-rust-{ref}`)
+- **Build command**: `cargo build --release --features=test_network`
+- **Artifact**: Just the binary (`snarkos-binary/snarkos`)
+
+### setup-sdk.yml
+- **Runner**: `ubuntu-latest-l`
+- **Caching**: Build cache via `actions/cache@v4` (key: `sdk-build-{version}`)
+- **Rust toolchain**: `nightly-2025-08-28` with `wasm32-unknown-unknown` target
+- **Rust cache**: `Swatinem/rust-cache@v2` (shared-key: `sdk-wasm-rust-{ref}`)
+- **Node.js**: **24** with yarn cache
+- **Install**: `yarn install --immutable --check-cache`
+- **Build command**: `yarn build:all`
+- **Artifact**: `sdk-local.tgz`, `wasm-dist/`, `wasm-package.json`
+
+### setup-dps.yml
+- **Runner**: `ubuntu-latest-l`
+- **Caching**: Binary cache via `actions/cache@v4` (key: `dps-binary-{version}`)
+- **Rust cache**: `Swatinem/rust-cache@v2` (shared-key: `dps-rust-{ref}`)
+- **Checkout branch**: `feat/test-flag` (hardcoded)
+- **Build command**: `cargo build --release --features test`
+- **Artifact**: Just the binary (`dps-binary/prover`)
+- **Requires secret**: `REPO_ACCESS_TOKEN`
+
+### setup-provapipe.yml (disabled)
+- **Runner**: `ubuntu-latest-m`
+- **Build command**: `cargo build --release`
+- **System deps**: `libsasl2-dev`
+- **Uses**: `actions/upload-artifact@v4`
+
+### setup-record-scanning-service.yml (disabled)
+- **Runner**: `ubuntu-latest-m`
+- **SSH agent**: `webfactory/ssh-agent@v0.9.0`
+- **Build command**: `cargo build --release`
+- **Uses**: `actions/upload-artifact@v4`
+- **Requires secrets**: `REPO_ACCESS_TOKEN`, `DEPENDENCY_CUSNARK_SSH_KEY`
+
+## Action Versions
+
+⚠️ **IMPORTANT**: Always use Context7 MCP to verify latest action versions before updating workflows. The versions below reflect current usage and may be outdated.
+
+| Action | Current | Check Latest |
+|--------|---------|--------------|
+| actions/checkout | v5 | `context7 actions/checkout` |
+| actions/setup-node | v6 | `context7 actions/setup-node` |
+| actions/upload-artifact | v5 (main), v4 (provapipe/RSS) | `context7 actions/upload-artifact` |
+| actions/download-artifact | v5 | `context7 actions/download-artifact` |
+| actions/cache | v4 | `context7 actions/cache` |
+| actions-rust-lang/setup-rust-toolchain | v1 | `context7 actions-rust-lang/setup-rust-toolchain` |
+| Swatinem/rust-cache | v2 | `context7 Swatinem/rust-cache` |
+| cloudflare/pages-action | v1 | `context7 cloudflare/pages-action` |
+| webfactory/ssh-agent | v0.9.0 | `context7 webfactory/ssh-agent` |
+
+## GitHub Runners
+
+| Job Type | Runner |
+|----------|--------|
+| snarkOS/SDK/DPS build | `ubuntu-latest-l` |
+| Integration tests | `ubuntu-latest-l` |
+| Provapipe/RSS build | `ubuntu-latest-m` |
+| Generate matrix / Aggregate | `ubuntu-latest` |
+
+⚠️ **Always use Context7 MCP to verify latest action versions before making workflow changes**
+
+## Integration Test Suites
+
+**Test Framework**: Node.js-based tests using `node:test`
+
+### sdk-devnet
+- Local SDK package installation verification
+- snarkOS devnet lifecycle management
+- SDK connectivity to local node
+- Aleo program deployment transaction building
+
+### dps-devnet
+- DPS binary availability check
+- DPS service lifecycle management
+- Delegated proving via transfer_public transaction
+- Transaction confirmation on blockchain
+- Balance verification after transfer
+
+**Running Tests**:
+```bash
+# Run all tests (handles clone, build, devnet)
+./tests/run-all-tests.sh
+
+# Skip build (use pre-built artifacts)
+./tests/run-all-tests.sh --skip-build
+
+# Dev mode (don't stop services after tests)
+./tests/run-all-tests.sh --dev
+```
+
+**Test Timeouts**:
+- sdk-devnet: 60 minutes
+- dps-devnet: 60 minutes
 
 ## Local Execution
 
-**Direct Test Execution**:
+**Requirements**:
+- Node.js 24.x with yarn
+- Rust nightly toolchain (for WASM)
+- Git (for cloning repositories)
+
+**One Command**:
 ```bash
-# One command - handles everything
 ./tests/run-all-tests.sh
 ```
 
-**Requirements**:
-- Node.js 20.x with yarn
-- Rust toolchain (for building snarkOS/WASM)
-- Git (for cloning repositories)
-
 **What it does**:
-1. Cleans old repos and clones fresh from GitHub (shallow clone, fast)
+1. Cleans old repos and clones fresh from GitHub (shallow clone)
 2. Builds snarkOS from scratch
 3. Builds and prepares SDK packages with version markers
-4. Runs all test suites
-5. Generates reports in `test-results/`
-
-**Always gets latest**: Every run does shallow clone (latest commit only) and builds from scratch
+4. Starts devnet and DPS
+5. Runs all test suites
+6. Generates reports in `test-results/`
 
 ## Dependencies
 
 **Public Repositories**:
-- **snarkOS**: Rust, Cargo, builds to release binary
-- **SDK**: TypeScript/JavaScript, yarn, includes WASM modules
+- **snarkOS**: Rust stable, builds with `--features=test_network`
+- **SDK**: Rust nightly-2025-08-28, Node.js 24, yarn, WASM target
 
 **Private Repositories** (require secrets):
+- **DPS**: Rust stable, requires `MY_GITHUB_TOKEN`, builds with `--features test`
 - **Record Scanning Service**: Rust, requires `MY_GITHUB_TOKEN` and `DEPENDENCY_CUSNARK_SSH_KEY`
-- **Provapipe**: Requires `MY_GITHUB_TOKEN`
+- **Provapipe**: Rust, requires `MY_GITHUB_TOKEN`, needs `libsasl2-dev`
 
-**Build Requirements**:
-- Rust toolchain (stable)
-- Node.js 20.x with yarn
-- WASM build tools (wasm-pack)
+## Compatibility Dashboard
 
-**Current**: Uses default branches. Future: commit hash specification.
+**URL**: Deployed to Cloudflare Pages (e2e-testing-reports)
 
-## Integration Test Suites
+**Features**:
+- Visual matrix of all version combinations
+- Pass/fail status for each combination
+- Timestamp of last test run
+- Filterable by component version
 
-**Test Framework**: Node.js-based tests using `node:test` that validate cross-component functionality with locally built packages.
-
-**Available Suite**:
-- **sdk-devnet**: Full stack integration test validating:
-  - Local SDK package installation
-  - snarkOS devnet lifecycle management
-  - SDK connectivity to local node
-  - Aleo program deployment transaction building
-
-**Running Tests**:
-```bash
-# Just run this - handles everything
-./tests/run-all-tests.sh
-```
-
-**Test Reports**: Generated in `test-results/` (JSON + GitHub summary)
-
-**Local Package Verification**: Tests use locally built SDK/snarkOS with version markers to ensure correct package sources.
+**Data Files**:
+- `compatibility/matrix.json`: Test results
+- `compatibility/versions.json`: Component configuration
 
 ## Milestone Status
 
 **Milestone 1**: ✅ Complete - snarkOS + SDK integration with devnet tests
-  - ✅ Local test framework
-  - ✅ CI workflow with parallel builds and artifact passing
-  - ✅ Full devnet lifecycle management in CI
-  - ✅ Professional test suite using node:test (sdk-devnet)
 
-**Milestone 2**: 📋 Planned - Record scanning service integration
-  - Requires private repo access and secrets
-  - Workflow files commented out, ready to enable
+**Milestone 2**: ✅ Complete - DPS integration
+  - ✅ DPS build workflow
+  - ✅ dps-devnet test suite
+  - ✅ Delegated proving validation
+  - ✅ Compatibility matrix with 3 components
 
-**Milestone 3**: 📋 Planned - Provapipe integration
-  - Requires private repo access
-  - Workflow files commented out, ready to enable
+**Milestone 3**: 📋 Planned - Compatibility dashboard enhancements
+  - ✅ Cloudflare Pages deployment
+  - ✅ Nightly version updates
 
-**Milestone 4**: 📋 Future - Wallet application testing
+**Milestone 4**: 📋 Planned - Record scanning service integration
+
+**Milestone 5**: 📋 Future - Wallet application testing
 
 ## Common Operations
 
 **Adding a new component**:
-1. Create reusable workflow in `.github/workflows/setup-<component>.yml`
-2. Add build job to `integration-tests.yml`
-3. Add artifact download step to `integration-tests` job
-4. Update `tests/setup/install-packages.sh` if needed
+1. Use Context7 MCP to get latest action versions
+2. Create reusable workflow in `.github/workflows/setup-<component>.yml`
+3. Add component to `compatibility/versions.json`
+4. Add build job to `compatibility-matrix.yml`
+5. Add input parameter to workflow_dispatch in compatibility-matrix.yml
+6. Handle the new input in generate-matrix step
 
 **Adding a test suite**:
 1. Create directory in `tests/integration/<suite-name>/`
 2. Add `package.json` with `@provablehq/sdk` dependency
 3. Create `test.js` using node:test framework
 4. Add suite name to `testSuites` array in `tests/run-all-tests.js`
+5. Add timeout configuration in `suiteTimeouts`
 
-**Modifying test commands**: Update `tests/run-all-tests.sh` or individual test files
+**Updating versions.json**:
+- Runs automatically on nightly schedule
+- Tags fetched from GitHub API
+- Commits with `[skip ci]` to avoid triggering builds
 
-**Updating GitHub Actions**: Use Context7 MCP to verify latest action versions
+**Manual matrix test**:
+```bash
+gh workflow run compatibility-matrix.yml \
+  --field snarkos_versions=v4.4.0 \
+  --field sdk_versions=v0.9.14 \
+  --field dps_versions=v0.18.1
+```
 
 ## Troubleshooting
 
@@ -218,112 +304,113 @@ Use Context7 MCP to verify latest versions when updating workflows
 
 **Build job failures**: 
 - Check component-specific workflows in `.github/workflows/setup-*.yml`
-- Verify secrets are configured (for private repos): `MY_GITHUB_TOKEN`, `DEPENDENCY_CUSNARK_SSH_KEY`
+- Verify secrets are configured: `MY_GITHUB_TOKEN`, `DEPENDENCY_CUSNARK_SSH_KEY`
 - Check Rust cache compatibility (Swatinem/rust-cache@v2)
-- For SDK build: 
-  - Ensure Rust toolchain is set up before WASM build
-  - Verify wasm-pack is installed
-  - WASM must build before SDK package build
-  - Check `RUSTFLAGS="-C target-cpu=native"` for WASM compilation
-- For snarkOS build: Check `RUSTFLAGS="-C target-cpu=native"` compatibility
+- For SDK build: Requires Rust nightly-2025-08-28 with wasm32-unknown-unknown target
+- For snarkOS build: Uses `--features=test_network`
+- For DPS build: Requires `--features test` flag, checks out `feat/test-flag` branch
 
 **Integration test failures**:
 - Review test reports in workflow artifacts (7-day retention)
-- Download `integration-test-report` artifact and check `test-report.json`
-- Check GitHub step summary for test result overview
+- Download `integration-test-report` artifact
+- Check GitHub step summary for overview
 - Verify local package versions have `-local-<commit>` markers
-- Ensure artifacts downloaded to correct paths (`local_build/`)
 
 **DevNet issues in CI**:
 - Check devnet logs: `/tmp/snarkos-devnet-logs/validator-*.log`
-- Verify all 4 validators started (check PIDs in `/tmp/snarkos-devnet-test.pid`)
-- Ensure REST API endpoint is accessible: `http://localhost:3030/v2/testnet/block/height/latest`
-- DevNet requires 120s timeout for 4 validators to sync
-- Check if snarkOS binary is executable after artifact download
+- Verify all 4 validators started
+- DevNet requires 120s timeout for validators to sync
+- REST API endpoint: `http://localhost:3030/v2/testnet/block/height/latest`
 
-**Artifact issues**:
-- Ensure build jobs complete successfully before integration tests job starts
-- Check artifact names match between upload (setup-*.yml) and download (integration-tests.yml)
-- Verify artifacts uploaded to correct paths (retention: 1 day for builds, 7 days for reports)
-- Artifacts should include hidden files (`include-hidden-files: true`)
+**DPS issues in CI**:
+- Check DPS logs: `/tmp/dps-logs/dps.log`
+- DPS endpoint: `http://localhost:3000/prove`
+- Verify DPS binary has execute permission
+
+**Compatibility matrix issues**:
+- Check generate-matrix step output for version detection
+- Verify versions.json has valid JSON structure
+- Check if GitHub API rate limit exceeded
+- Matrix uses all combinations: snarkos × sdk × dps
 
 **Cache issues**:
-- Rust cache uses `shared-key` for cross-job sharing
-- Yarn cache uses `cache-dependency-path: local_build/sdk/yarn.lock`
-- Cache misses: Check if cache keys changed between runs
-- Clear cache: Re-run workflow or manually delete in GitHub Actions cache settings
+- Binary caches: `snarkos-binary-{version}`, `sdk-build-{version}`, `dps-binary-{version}`
+- Rust caches use `shared-key` for cross-job sharing
+- Cache miss: Check if version/ref changed between runs
 
 ### Local Development
 
 **Quick Start**:
-- Run `./tests/run-all-tests.sh` - it handles everything
-- Always clones fresh and builds from scratch (ensures latest code)
-- Requires Node.js 20.x, yarn, and Rust toolchain
+```bash
+./tests/run-all-tests.sh
+```
 
 **Test failures**:
 1. Verify locally built packages have `-local-` version markers
 2. Check `yarn.lock` files contain `file:` protocol references
-3. Ensure snarkOS binary exists for devnet tests (or tests will skip)
+3. Ensure snarkOS/DPS binaries exist for devnet tests
 4. Review component compatibility if multiple tests fail
 
 **Build issues**:
-- WASM build must complete before SDK build (automatic)
+- WASM build requires Rust nightly with wasm32-unknown-unknown target
 - Check `local_build/sdk/wasm/dist/` exists after build
-- SDK build errors usually mean WASM isn't built yet
+- DPS requires `--features test` for local environment
 
 **Known limitations**: 
-- Rust may crash on Apple Silicon Macs due to QEMU emulation (use GitHub Actions)
+- Rust may crash on Apple Silicon Macs due to QEMU emulation
 - Private components not available for local testing without access
-- DevNet tests require snarkOS to be fully built (time-intensive)
-
-## Related Documentation
-
-- [snarkOS Documentation](https://developer.aleo.org/sdk/overview)
-- [SDK Reference](https://github.com/ProvableHQ/sdk/blob/mainnet/.github/workflows/website.yml)
-- [act Documentation](https://github.com/nektos/act)
+- DevNet/DPS tests require binaries to be fully built
 
 ## Notes for AI Agents
 
+⚠️ **CRITICAL**: Always use Context7 MCP to verify latest GitHub Action versions before modifying any workflow file. Do not assume the versions in this document are current.
+
 **Workflow Architecture**:
 - Multi-job design with parallel builds and artifact passing
-- Uses default branches - commit hash specification planned
-- Public repos (snarkOS, SDK) + private repos (record-scanning, provapipe)
-- Requires `MY_GITHUB_TOKEN` and `DEPENDENCY_CUSNARK_SSH_KEY` secrets for private components
-- Artifacts downloaded to `local_build/` directory (matches local development structure)
-- Build jobs complete before integration tests job (dependency chain)
+- Binary caching via `actions/cache@v4` for faster rebuilds
+- Compatibility matrix tests all version combinations
+- Results stored in matrix.json and deployed to dashboard
 
 **CI Build Process**:
-- SDK build: Sets up Rust + wasm-pack → Installs deps → Builds WASM (`sdk/wasm/yarn build`) → Builds SDK packages (`sdk/sdk/yarn build`)
-- snarkOS build: Builds release binary with `RUSTFLAGS="-C target-cpu=native"`
-- Artifacts include entire repositories with built binaries/packages
-- Smart caching: Rust cache with `shared-key`, yarn cache with `cache-dependency-path`
-- Note: WASM compilation requires Rust toolchain and wasm-pack
+- SDK: Rust nightly-2025-08-28 + wasm32 target → `yarn install --immutable` → `yarn build:all` → Create tarball
+- snarkOS: `cargo build --release --features=test_network`
+- DPS: `cargo build --release --features test` (from `feat/test-flag` branch)
+- Artifacts are minimal (just binaries/tarballs)
 
 **DevNet in CI**:
-- 4 validators started via `start-devnet.sh` (minimum for genesis committee)
-- 120s timeout for validators to sync and reach quorum
-- REST API endpoint: `http://localhost:3030/v2/testnet/block/height/latest`
-- Logs stored in `/tmp/snarkos-devnet-logs/validator-*.log`
-- Cleanup always runs (even on failure) via `stop-devnet.sh`
+- 4 validators via `start-devnet.sh` (minimum for genesis committee)
+- 120s timeout for validators to sync
+- REST API: `http://localhost:3030/v2/testnet/block/height/latest`
+- Cleanup always runs via `stop-devnet.sh`
+
+**DPS in CI**:
+- Started via `start-dps.sh`
+- Connects to local devnet on port 3030
+- Proves endpoint: `http://localhost:3000/prove`
+- Logs in `/tmp/dps-logs/dps.log`
 
 **Testing Strategy**:
-- Tests are non-blocking: collect results but don't fail CI pipeline (uses `|| true`)
-- Local packages verified via version markers (`-local-<commit>` suffix)
-- Test reports generated in JSON + GitHub summary formats
-- Uses node:test framework for structured assertions
-- Test suite: `sdk-devnet` - full stack integration
+- Tests are non-blocking: always exit 0 to not fail pipeline
+- Local packages verified via version markers (`-local-<commit>`)
+- Test reports: JSON + GitHub summary formats
+- node:test framework for structured assertions
+- Test timeouts: 60 minutes per suite
 
-**Local Development**:
-- One command: `./tests/run-all-tests.sh` - handles clean, clone, build, and test
-- Always cleans old repos and shallow clones fresh (fast, latest code only)
-- Builds everything from scratch each run
-- Automatically detects SDK/snarkOS in `local_build/` directory
-- Builds packages with version markers for verification
-- Private components not available without repository access
+**Compatibility Matrix**:
+- Reads component config from versions.json
+- Nightly: Fetches latest N tags from GitHub API
+- Tests all combinations of component versions
+- Results aggregated into matrix.json
+- Dashboard deployed to Cloudflare Pages
+
+**Version Management**:
+- versions.json: Source of truth for tags to test
+- matrix.json: Historical test results
+- Auto-updated on nightly runs with `[skip ci]` commits
+- Manual override via workflow_dispatch inputs
 
 **Component Integration**:
-- Record scanning integrated but private/closed source
-- Provapipe integrated but private/closed source  
-- All components downloaded as artifacts in CI
-- Local setup only includes public components (snarkOS, SDK)
-
+- snarkOS: Public, builds to binary with `--features=test_network`
+- SDK: Public, builds to npm tarball via `yarn build:all`
+- DPS: Private, builds to binary with `--features test`
+- All components use binary caching for faster CI
