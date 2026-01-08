@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-07T03:14:26Z",
+  "last_updated": "2026-01-08T03:13:35Z",
   "results": [
     {
       "snarkos_version": "v4.2.2",
@@ -68,21 +68,21 @@
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:57:45Z",
+      "timestamp": "2026-01-08T03:00:27Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:58:18Z",
+      "timestamp": "2026-01-08T02:59:05Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T03:01:28Z",
+      "timestamp": "2026-01-08T02:57:38Z",
       "dps_version": "v0.17.0"
     },
     {
@@ -110,168 +110,168 @@
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:08:04Z",
+      "timestamp": "2026-01-08T03:09:01Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:52Z",
+      "timestamp": "2026-01-08T03:09:29Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:14:15Z",
+      "timestamp": "2026-01-08T03:08:21Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:12:30Z",
+      "timestamp": "2026-01-08T03:09:01Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:12Z",
+      "timestamp": "2026-01-08T03:12:26Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:11:51Z",
+      "timestamp": "2026-01-08T03:08:21Z",
       "dps_version": "v0.17.0"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:57:46Z",
+      "timestamp": "2026-01-08T02:56:19Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:57:57Z",
+      "timestamp": "2026-01-08T03:03:35Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:58:07Z",
+      "timestamp": "2026-01-08T02:57:26Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:09Z",
+      "timestamp": "2026-01-08T03:13:21Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:08:37Z",
+      "timestamp": "2026-01-08T03:08:26Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:08:03Z",
+      "timestamp": "2026-01-08T03:08:25Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:46Z",
+      "timestamp": "2026-01-08T03:08:01Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:17Z",
+      "timestamp": "2026-01-08T03:11:47Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:08:36Z",
+      "timestamp": "2026-01-08T03:09:28Z",
       "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:59:26Z",
+      "timestamp": "2026-01-08T03:00:22Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T02:56:59Z",
+      "timestamp": "2026-01-08T02:57:42Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.10.0-testnet-rc",
       "result": "pass",
-      "timestamp": "2026-01-07T03:00:57Z",
+      "timestamp": "2026-01-08T02:57:36Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:10Z",
+      "timestamp": "2026-01-08T03:08:22Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:12:32Z",
+      "timestamp": "2026-01-08T03:09:04Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "pass",
-      "timestamp": "2026-01-07T03:08:40Z",
+      "timestamp": "2026-01-08T03:09:30Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.2.2",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:12:43Z",
+      "timestamp": "2026-01-08T03:09:09Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:42Z",
+      "timestamp": "2026-01-08T03:09:39Z",
       "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-07T03:09:48Z",
+      "timestamp": "2026-01-08T03:08:58Z",
       "dps_version": "v0.18.1"
     }
   ]
