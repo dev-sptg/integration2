@@ -36,12 +36,25 @@ echo "Using DPS binary: $DPS_BIN"
 # Create log directory
 mkdir -p "$LOG_DIR"
 
-# Check if DPS is already running
+# Check if DPS is already running and healthy
 if [ -f "$PID_FILE" ]; then
     OLD_PID=$(cat "$PID_FILE")
     if ps -p "$OLD_PID" > /dev/null 2>&1; then
-        echo "Warning: DPS already running (PID: $OLD_PID)" >&2
-        exit 0
+        # Process exists, but verify it's actually healthy
+        if curl -s -f "http://localhost:$DPS_PORT/health" > /dev/null 2>&1; then
+            echo "DPS already running and healthy (PID: $OLD_PID)"
+            exit 0
+        else
+            echo "DPS process exists (PID: $OLD_PID) but not healthy, restarting..."
+            kill "$OLD_PID" 2>/dev/null || true
+            sleep 2
+            # Force kill if still running
+            if ps -p "$OLD_PID" > /dev/null 2>&1; then
+                kill -9 "$OLD_PID" 2>/dev/null || true
+                sleep 1
+            fi
+            rm -f "$PID_FILE"
+        fi
     else
         echo "Removing stale PID file"
         rm -f "$PID_FILE"

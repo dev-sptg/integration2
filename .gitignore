@@ -1,3 +1,4 @@
+logs/
 # IDE and Editor files
 .vscode/
 .idea/
@@ -43,3 +44,4 @@ compatibility/dashboard-dist/
 *.ledger-*
 
 *.current-proposal-*
+*.node-data-*

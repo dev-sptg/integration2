@@ -19,10 +19,11 @@ const INTEGRATION_ROOT = process.env.INTEGRATION_ROOT || join(__dirname, '..');
 const TESTS_DIR = join(__dirname, 'integration');
 const REPORT_DIR = join(INTEGRATION_ROOT, 'test-results');
 
-const testSuites = ['sdk-devnet', 'dps-devnet'];
+const testSuites = ['sdk-devnet', 'transfer-public', 'dps-devnet'];
 const suiteTimeouts = {
-    'sdk-devnet': 60 * 60 * 1000, // 60 minutes
-    'dps-devnet': 60 * 60 * 1000  // 60 minutes
+    'sdk-devnet': 10 * 60 * 1000, // 10 minutes for snarkOS devnet lifecycle management + consensus version test heights
+    'transfer-public': 10 * 60 * 1000, // 10 minutes for proving keys download + transaction
+    'dps-devnet': 10 * 60 * 1000  // 10 minutes for DPS service lifecycle management
 };
 
 const report = new TestReport();
@@ -35,20 +36,20 @@ async function runAllTests() {
         mkdirSync(REPORT_DIR, { recursive: true });
     }
 
-    for (const suite of testSuites) {
+    // Run tests in parallel for speed
+    const testPromises = testSuites.map(async (suite) => {
         const suiteDir = join(TESTS_DIR, suite);
         const testScript = join(suiteDir, 'test.js');
 
         // Check if test script exists
         if (!existsSync(testScript)) {
             console.log(`Test script not found: ${testScript}`);
-            report.addTest({
+            return {
                 name: suite,
                 status: 'skipped',
                 duration: '0s',
                 error: 'Test script not found'
-            });
-            continue;
+            };
         }
 
         // Install dependencies if needed
@@ -63,21 +64,23 @@ async function runAllTests() {
                 });
             } catch (error) {
                 console.error(`Failed to install dependencies for ${suite}`);
-                report.addTest({
+                return {
                     name: suite,
                     status: 'failed',
                     duration: '0s',
                     error: 'Failed to install dependencies'
-                });
-                continue;
+                };
             }
         }
 
         // Run the test
         const timeoutMs = suiteTimeouts[suite] ?? undefined;
-        const result = await runTest(suite, testScript, suiteDir, timeoutMs);
-        report.addTest(result);
-    }
+        return await runTest(suite, testScript, suiteDir, timeoutMs);
+    });
+
+    // Wait for all tests to complete
+    const results = await Promise.all(testPromises);
+    results.forEach(result => report.addTest(result));
 
     // Generate reports
     const jsonPath = join(REPORT_DIR, 'test-report.json');
@@ -92,11 +95,12 @@ async function runAllTests() {
     // Print summary
     report.printSummary();
 
-    // Always exit with 0 (non-blocking)
-    process.exit(0);
+    // Exit with non-zero code if any tests failed
+    const exitCode = report.summary.failed > 0 ? 1 : 0;
+    process.exit(exitCode);
 }
 
 runAllTests().catch((error) => {
     console.error('Fatal error:', error);
-    process.exit(0); // Still exit 0 to not fail pipeline
+    process.exit(1); // Exit with error code on fatal error
 });

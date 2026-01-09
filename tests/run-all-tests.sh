@@ -128,8 +128,9 @@ export SDK_LOCAL_VERSION="${SDK_LOCAL_VERSION:-}"
 export SNARKOS_BINARY_PATH="${SNARKOS_BINARY_PATH:-$LOCAL_BUILD/snarkOS/target/release/snarkos}"
 export DEV_MODE="$DEV_MODE"
 
-# Run tests
-node "$RUNNER_DIR/run-all-tests.js" || true
+# Run tests (propagate exit code to indicate failure)
+node "$RUNNER_DIR/run-all-tests.js"
+TEST_EXIT_CODE=$?
 
 # Display results
 if [ -f "$REPORT_DIR/test-report.json" ]; then
@@ -139,5 +140,5 @@ if [ -f "$REPORT_DIR/test-report.json" ]; then
     echo "Summary: $REPORT_DIR/github-summary.md"
 fi
 
-exit 0
+exit $TEST_EXIT_CODE
 

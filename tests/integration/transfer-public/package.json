@@ -1,8 +1,8 @@
 {
-  "name": "sdk-devnet-integration-test",
+  "name": "transfer-public-integration-test",
   "version": "1.0.0",
   "type": "module",
-  "description": "SDK + snarkOS devnet cross-component integration tests",
+  "description": "Integration test for public Aleo credit transfers",
   "scripts": {
     "test": "node test.js"
   },

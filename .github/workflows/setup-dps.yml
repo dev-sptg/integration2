@@ -64,7 +64,7 @@ jobs:
         with:
           repository: provableHQ/delegated-proving-service
           path: dps
-          ref: "feat/test-flag"
+          ref: master
           fetch-depth: 1
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
 

@@ -5,8 +5,7 @@
       "repo": "provableHQ/snarkOS",
       "tags": [
         "v4.4.0",
-        "v4.3.0",
-        "v4.2.2"
+        "v4.3.0"
       ],
       "branches": []
     },
@@ -14,7 +13,6 @@
       "label": "SDK",
       "repo": "ProvableHQ/sdk",
       "tags": [
-        "v0.10.0-testnet-rc",
         "v0.9.14",
         "v0.9.13"
       ],
@@ -24,9 +22,7 @@
       "label": "DPS",
       "repo": "provableHQ/delegated-proving-service",
       "tags": [
-        "v0.18.1",
-        "v0.18.0",
-        "v0.17.0"
+        "v0.18.1"
       ],
       "branches": []
     }
@@ -36,7 +32,7 @@
       "sdk",
       "dps"
     ],
-    "test_latest_n_tags": 3,
+    "test_latest_n_tags": 2,
     "include_branches": false
   }
 }

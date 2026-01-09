@@ -67,13 +67,63 @@ function getSystemStats(previousCpuSnapshot = null) {
  * Test result structure
  */
 export class TestResult {
-    constructor(name, status, duration, error = null) {
+    constructor(name, status, duration, error = null, subtests = []) {
         this.name = name;
         this.status = status; // 'passed', 'failed', 'skipped'
         this.duration = duration;
         this.error = error;
+        this.subtests = subtests; // Array of {name, status, duration}
         this.timestamp = new Date().toISOString();
     }
+
+    toJSON() {
+        return {
+            name: this.name,
+            status: this.status,
+            duration: this.duration,
+            error: this.error,
+            subtests: this.subtests,
+            timestamp: this.timestamp
+        };
+    }
+}
+
+/**
+ * Parse TAP output to extract subtest results
+ * @param {string} output - TAP format output
+ * @returns {Array} - Array of {name, status, duration}
+ */
+function parseTapOutput(output) {
+    const subtests = [];
+    const lines = output.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Match subtest results: "ok 1 - Test name" or "not ok 1 - Test name"
+        const match = line.match(/^(ok|not ok)\s+\d+\s+-\s+(.+)$/);
+        if (match) {
+            const status = match[1] === 'ok' ? 'passed' : 'failed';
+            const name = match[2];
+            
+            // Look for duration in the following lines (TAP YAML block)
+            let duration = null;
+            for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+                const durationMatch = lines[j].match(/duration_ms:\s*([\d.]+)/);
+                if (durationMatch) {
+                    const ms = parseFloat(durationMatch[1]);
+                    duration = ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms.toFixed(0)}ms`;
+                    break;
+                }
+                // Stop if we hit another test result
+                if (lines[j].trim().match(/^(ok|not ok)\s+\d+/)) break;
+            }
+            
+            subtests.push({ name, status, duration });
+        }
+    }
+    
+    return subtests;
 }
 
 /**
@@ -154,8 +204,7 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
     const initialStats = getSystemStats();
     console.log(`\n🧪 Running test: ${testName}`);
     console.log(`⏱️  Timeout: ${(timeoutMs / 1000 / 60).toFixed(1)} minutes`);
-    console.log(`💻 System: ${initialStats.cpuCores} cores, ${initialStats.memTotalGB} GB RAM available`);
-    
+
     // Track CPU snapshot for delta calculations
     let lastCpuSnapshot = initialStats.cpuSnapshot;
 
@@ -163,44 +212,67 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
     const INTEGRATION_ROOT = process.env.INTEGRATION_ROOT || join(__dirname, '../..');
     const traceDir = join(INTEGRATION_ROOT, 'test-results', 'traces');
     const traceFile = join(traceDir, `${testName}.log`);
-    
+
     // Ensure trace directory exists
     if (!existsSync(traceDir)) {
         mkdirSync(traceDir, { recursive: true });
     }
-    
-    // Create write stream for trace file
-    const traceStream = createWriteStream(traceFile, { flags: 'w' });
+
+    // Create write stream for trace file (flush immediately for real-time logging)
+    const traceStream = createWriteStream(traceFile, { flags: 'w', flush: true });
     traceStream.write(`=== Test Trace: ${testName} ===\n`);
     traceStream.write(`Started: ${new Date().toISOString()}\n`);
     traceStream.write(`Timeout: ${(timeoutMs / 1000 / 60).toFixed(1)} minutes\n`);
     traceStream.write(`System: ${initialStats.cpuCores} cores, ${initialStats.memTotalGB} GB RAM\n`);
     traceStream.write(`${'='.repeat(60)}\n\n`);
 
+    // Buffer output for clean printing after test completes
+    const stdoutBuffer = [];
+    const stderrBuffer = [];
+
     return new Promise((resolve) => {
-        const child = spawn('node', [testScript], {
+        const child = spawn('node', ['--unhandled-rejections=strict', '--test-force-exit', testScript], {
             cwd: cwd,
             stdio: ['inherit', 'pipe', 'pipe'], // stdin: inherit, stdout/stderr: pipe
             shell: false,
             env: {
                 ...process.env,
-                NODE_NO_WARNINGS: '1'
+                NODE_NO_WARNINGS: '1',
+                NODE_ENV: 'test',
+                FORCE_COLOR: '0'
             }
         });
 
-        // Pipe stdout to both trace file and parent stdout
+        // Buffer stdout for trace file and delayed printing
         child.stdout.on('data', (data) => {
             traceStream.write(data);
-            process.stdout.write(data);
+            stdoutBuffer.push(data);
         });
 
-        // Pipe stderr to both trace file and parent stderr
+        // Buffer stderr for trace file and delayed printing
         child.stderr.on('data', (data) => {
             traceStream.write(data);
-            process.stderr.write(data);
+            stderrBuffer.push(data);
         });
 
         let resolved = false;
+
+        // Helper to print buffered output
+        const printBufferedOutput = () => {
+            if (stdoutBuffer.length > 0 || stderrBuffer.length > 0) {
+                console.log(`\n${'='.repeat(60)}`);
+                console.log(`📋 Full output for ${testName}:`);
+                console.log(`${'='.repeat(60)}`);
+                if (stdoutBuffer.length > 0) {
+                    process.stdout.write(Buffer.concat(stdoutBuffer));
+                }
+                if (stderrBuffer.length > 0) {
+                    process.stderr.write(Buffer.concat(stderrBuffer));
+                }
+                console.log(`${'='.repeat(60)}`);
+            }
+            console.log(`📁 Trace file: ${traceFile}`);
+        };
 
         // Set up timeout
         const timeout = setTimeout(() => {
@@ -208,31 +280,24 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
                 resolved = true;
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
                 const finalStats = getSystemStats(lastCpuSnapshot);
-                
-                console.log(`\n❌ ${testName} TIMEOUT DETAILS:`);
-                console.log(`   Duration: ${duration}`);
-                console.log(`   Timeout: ${(timeoutMs / 1000 / 60).toFixed(1)} minutes`);
-                console.log(`   Reason: Test exceeded maximum execution time`);
-                console.log(`   System at timeout: CPU ${finalStats.cpuUsage}%, Memory ${finalStats.memUsagePercent}% (${finalStats.memUsedGB}/${finalStats.memTotalGB} GB)`);
-                console.log(`   Action: Sending SIGTERM to test process (PID: ${child.pid})`);
-                
+
+                console.log(`\n❌ ${testName} TIMEOUT`);
+                console.log(`   Duration: ${duration} | Timeout: ${(timeoutMs / 1000 / 60).toFixed(1)} minutes`);
+                console.log(`   System: CPU ${finalStats.cpuUsage}%, Memory ${finalStats.memUsagePercent}%`);
+                printBufferedOutput();
+
                 child.kill('SIGTERM');
-                
-                // Force kill after 5 seconds if still running
+
                 setTimeout(() => {
                     if (!child.killed) {
-                        console.log(`   Action: Force killing with SIGKILL (process didn't respond to SIGTERM)`);
                         child.kill('SIGKILL');
                     }
                 }, 5000);
-                
-                const errorMsg = `Test timed out after ${(timeoutMs / 1000 / 60).toFixed(1)} minutes. ` +
-                    `The test was still running and did not complete within the allocated time. ` +
-                    `This usually indicates: (1) a hanging network operation, (2) an infinite loop, ` +
-                    `or (3) a resource that failed to respond. Check logs above for the last operation before timeout.`;
-                
+
+                const errorMsg = `Timed out after ${(timeoutMs / 1000 / 60).toFixed(1)} minutes`;
+
                 traceStream.end();
-                
+
                 resolve(new TestResult(testName, 'failed', duration, errorMsg));
             }
         }, timeoutMs);
@@ -242,39 +307,50 @@ export async function runTest(testName, testScript, cwd, timeoutMs = 1800000) {
                 resolved = true;
                 clearTimeout(timeout);
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
-                
-                traceStream.end();
-                
+
                 console.log(`\n❌ ${testName} ERROR: ${error.message}`);
-                if (error.stack) {
-                    console.log(`   Stack: ${error.stack}`);
-                }
+                printBufferedOutput();
+
+                traceStream.end();
+
                 resolve(new TestResult(testName, 'failed', duration, `Process error: ${error.message}`));
             }
         });
 
-        child.on('exit', (code, signal) => {
+        child.on('exit', async (code, signal) => {
             if (!resolved) {
                 resolved = true;
                 clearTimeout(timeout);
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
-                
-                traceStream.end();
-                
+
+                // Close trace stream with 5 minute timeout to prevent hanging
+                await new Promise(resolveStream => {
+                    const streamTimeout = setTimeout(resolveStream, 5 * 60 * 1000);
+                    traceStream.end(() => {
+                        clearTimeout(streamTimeout);
+                        resolveStream();
+                    });
+                });
+
+                // Parse TAP output for subtest details
+                const output = Buffer.concat(stdoutBuffer).toString();
+                const subtests = parseTapOutput(output);
+
                 if (code === 0) {
                     console.log(`✅ ${testName} passed (${duration})`);
-                    resolve(new TestResult(testName, 'passed', duration));
-                } else {
-                    let errorMsg = '';
-                    if (signal) {
-                        errorMsg = `Killed by signal: ${signal}`;
-                    } else if (code) {
-                        errorMsg = `Exit code: ${code}`;
-                    } else {
-                        errorMsg = 'Unknown error';
+                    // Print last 10 lines of output (contains TAP summary)
+                    const lines = output.split('\n').filter(l => l.trim());
+                    const lastLines = lines.slice(-10);
+                    if (lastLines.length > 0) {
+                        console.log(lastLines.map(l => '   ' + l).join('\n'));
                     }
+                    console.log(`   📁 Trace: ${traceFile}`);
+                    resolve(new TestResult(testName, 'passed', duration, null, subtests));
+                } else {
+                    let errorMsg = signal ? `Killed by signal: ${signal}` : `Exit code: ${code}`;
                     console.log(`❌ ${testName} failed (${duration}) - ${errorMsg}`);
-                    resolve(new TestResult(testName, 'failed', duration, errorMsg));
+                    printBufferedOutput();
+                    resolve(new TestResult(testName, 'failed', duration, errorMsg, subtests));
                 }
             }
         });
@@ -448,6 +524,29 @@ export function saveReport(report, outputPath) {
     const json = JSON.stringify(report.toJSON(), null, 2);
     writeFileSync(outputPath, json, 'utf8');
     console.log(`\n📊 Test report saved to: ${outputPath}`);
+}
+
+/**
+ * Get account balance from credits.aleo mapping (for devnet private accounts)
+ * Uses getProgramMappingValue instead of getPublicBalance
+ * @param {AleoNetworkClient} networkClient - The network client
+ * @param {string} address - The address to check
+ * @returns {Promise<bigint>} - The balance in microcredits
+ */
+export async function getAccountBalance(networkClient, address) {
+    try {
+        const mapping = await networkClient.getProgramMappingValue('credits.aleo', 'account', address);
+        return mapping ? BigInt(mapping.replace('u64', '')) : BigInt(0);
+    } catch { return BigInt(0); }
+}
+
+/**
+ * Convert credits to microcredits (BigInt)
+ * @param {number} credits - Amount in credits
+ * @returns {bigint} - Amount in microcredits
+ */
+export function creditsToMicrocredits(credits) {
+    return BigInt(Math.floor(credits * 1_000_000));
 }
 
 /**

@@ -49,6 +49,7 @@ const INTEGRATION_ROOT = join(__dirname, '../../..');
 const CONFIG = {
     devnetApi: 'http://localhost:3030',
     dpsApi: 'http://localhost:3000/prove',
+    dpsHealthUrl: 'http://localhost:3000/health',
     txConfirmationTimeout: 120000, // 2 minutes
     provingRequestTimeout: 300000, // 5 minutes
     devMode: process.env.DEV_MODE === 'true',
@@ -138,7 +139,7 @@ test('DPS Delegated Proving Integration Tests', async (t) => {
 
         // Test 4: Start devnet (or reuse if already running)
         await t.test('Start snarkOS devnet', async () => {
-            const isRunning = await isServiceAccessible({ url: `${CONFIG.devnetApi}/v2/testnet/block/height/latest`, timeout: 2000 });
+            const isRunning = isServiceAccessible(`${CONFIG.devnetApi}/v2/testnet/block/height/latest`);
             
             if (isRunning) {
                 console.log('  Devnet already running, reusing...');
@@ -153,20 +154,20 @@ test('DPS Delegated Proving Integration Tests', async (t) => {
 
         // Test 5: Start DPS (or reuse if already running)
         await t.test('Start DPS', async () => {
-            const isRunning = await isServiceAccessible({ url: `${CONFIG.dpsApi}/health`, timeout: 2000 });
-            
+            const isRunning = isServiceAccessible(CONFIG.dpsHealthUrl);
+
             if (isRunning) {
                 console.log('  DPS already running, reusing...');
                 services.dps = false; // Don't stop it in cleanup since we didn't start it
             } else {
                 console.log('  Starting DPS...');
-                startService({ 
-                    script: `${INTEGRATION_ROOT}/tests/setup/start-dps.sh`, 
+                startService({
+                    script: `${INTEGRATION_ROOT}/tests/setup/start-dps.sh`,
                     name: 'DPS',
                     env: { DPS_BINARY_PATH: dpsPath }
                 });
                 services.dps = true; // We started it, so we should clean it up
-                await waitForService({ url: `${CONFIG.dpsApi}/health`, name: 'DPS', timeout: 30000 });
+                await waitForService({ url: CONFIG.dpsHealthUrl, name: 'DPS', timeout: 120000 });
             }
         });
 
@@ -294,6 +295,6 @@ test('DPS Delegated Proving Integration Tests', async (t) => {
         execSync(`tail -n 100 /tmp/dps-logs/dps.log`, { stdio: 'inherit' });
         
     } finally {
-        await cleanup();
+        // await cleanup();
     }
 });

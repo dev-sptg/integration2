@@ -305,7 +305,7 @@ class CompatibilityDashboard {
       return new Date(b.timestamp || 0) - new Date(a.timestamp || 0);
     });
 
-    historyList.innerHTML = sortedResults.map(result => {
+    historyList.innerHTML = sortedResults.map((result, index) => {
       // Build component version badges dynamically
       const componentBadges = [];
       
@@ -320,14 +320,60 @@ class CompatibilityDashboard {
         }
       });
 
+      // Build test details HTML
+      const tests = result.tests || [];
+      const hasTests = tests.length > 0;
+      const testsHtml = hasTests ? this.renderTestDetails(tests) : '';
+
       return `
-        <div class="history-item">
-          <div class="history-status ${result.result}"></div>
-          <div class="history-versions">
-            ${componentBadges.join('<span> × </span>')}
+        <div class="history-entry ${hasTests ? 'expandable' : ''}" data-index="${index}">
+          <div class="history-item" ${hasTests ? `onclick="toggleTestDetails(${index})"` : ''}>
+            <div class="history-status ${result.result}"></div>
+            <div class="history-versions">
+              ${componentBadges.join('<span> × </span>')}
+            </div>
+            <div class="history-result ${result.result}">${result.result}</div>
+            <div class="history-time">${this.formatDate(result.timestamp)}</div>
+            ${hasTests ? '<div class="expand-icon">▼</div>' : ''}
           </div>
-          <div class="history-result ${result.result}">${result.result}</div>
-          <div class="history-time">${this.formatDate(result.timestamp)}</div>
+          ${hasTests ? `<div class="test-details" id="details-${index}">${testsHtml}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderTestDetails(tests) {
+    return tests.map(test => {
+      const statusIcon = test.status === 'passed' ? '✓' : test.status === 'failed' ? '✗' : '○';
+      const statusClass = test.status === 'passed' ? 'pass' : test.status === 'failed' ? 'fail' : 'skipped';
+      
+      // Render subtests if available
+      const subtests = test.subtests || [];
+      const subtestsHtml = subtests.length > 0 ? `
+        <div class="subtests">
+          ${subtests.map(sub => {
+            const subIcon = sub.status === 'passed' ? '✓' : sub.status === 'failed' ? '✗' : '○';
+            const subClass = sub.status === 'passed' ? 'pass' : sub.status === 'failed' ? 'fail' : 'skipped';
+            return `
+              <div class="subtest-item">
+                <span class="test-icon ${subClass}">${subIcon}</span>
+                <span class="test-name">${sub.name}</span>
+                <span class="test-duration">${sub.duration || ''}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : '';
+      
+      return `
+        <div class="test-suite">
+          <div class="test-item suite-header">
+            <span class="test-icon ${statusClass}">${statusIcon}</span>
+            <span class="test-name"><strong>${test.name}</strong></span>
+            <span class="test-duration">${test.duration || ''}</span>
+          </div>
+          ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+          ${subtestsHtml}
         </div>
       `;
     }).join('');
@@ -437,6 +483,21 @@ class CompatibilityDashboard {
     if (diffDays < 7) return `${diffDays}d ago`;
     
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+}
+
+// Global function to toggle test details
+function toggleTestDetails(index) {
+  const details = document.getElementById(`details-${index}`);
+  const entry = details.closest('.history-entry');
+  
+  if (details.classList.contains('expanded')) {
+    details.classList.remove('expanded');
+    entry.classList.remove('expanded');
+  } else {
+    details.classList.add('expanded');
+    entry.classList.add('expanded');
   }
 }
 

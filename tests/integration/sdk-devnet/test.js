@@ -16,25 +16,31 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { 
-    Account, 
-    AleoNetworkClient, 
-    ProgramManager, 
-    AleoKeyProvider, 
-    NetworkRecordProvider,
-    getOrInitConsensusVersionTestHeights
+import {
+    Account,
+    AleoNetworkClient,
+    ProgramManager,
+    AleoKeyProvider,
+    NetworkRecordProvider
 } from '@provablehq/sdk/testnet.js';
-import { 
-    verifyLocalSDK, 
-    startService, 
-    stopService, 
-    isServiceAccessible 
+import {
+    verifyLocalSDK,
+    startService,
+    stopService,
+    isServiceAccessible
 } from '../../setup/test-helpers.js';
 
-// Set consensus heights for development network
+// Set consensus heights for development network (only for SDK versions that support it)
 const DEVNET_CONSENSUS_HEIGHTS = "0,1,2,3,4,5,6,7,8,9,10,11";
-const heights = getOrInitConsensusVersionTestHeights(DEVNET_CONSENSUS_HEIGHTS);
-console.log(`Consensus version test heights initialized: [${heights.join(',')}]`);
+try {
+    const sdkModule = await import('@provablehq/sdk/testnet.js');
+    if ('getOrInitConsensusVersionTestHeights' in sdkModule) {
+        const heights = sdkModule.getOrInitConsensusVersionTestHeights(DEVNET_CONSENSUS_HEIGHTS);
+        console.log(`Consensus version test heights initialized: [${heights.join(',')}]`);
+    }
+} catch (error) {
+    console.error(`Could not initialize consensus version test heights: ${error.message}`);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -100,7 +106,7 @@ test('SDK Integration Tests', async (t) => {
 
         // Test 3: Start devnet (or reuse if already running)
         await t.test('Start snarkOS devnet', async () => {
-            const isRunning = await isServiceAccessible({ url: `${CONFIG.devnetApi}/v2/testnet/block/height/latest`, timeout: 2000 });
+            const isRunning = isServiceAccessible(`${CONFIG.devnetApi}/v2/testnet/block/height/latest`);
             
             if (isRunning) {
                 console.log('  Devnet already running, reusing...');
@@ -170,8 +176,9 @@ test('SDK Integration Tests', async (t) => {
         }, { timeout: CONFIG.deploymentTimeout + 5000 });
 
         console.log('\n  All integration tests passed');
-        
+
     } finally {
         await cleanup();
     }
 });
+

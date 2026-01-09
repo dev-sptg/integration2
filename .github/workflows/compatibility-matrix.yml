@@ -238,6 +238,7 @@ jobs:
   test-compatibility:
     needs: [generate-matrix, build-snarkos, build-sdk, build-dps]
     runs-on: ubuntu-latest-l
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -353,6 +354,12 @@ jobs:
           chmod +x tests/run-all-tests.sh
           ./tests/run-all-tests.sh --dev --skip-build && echo "result=pass" >> $GITHUB_OUTPUT || echo "result=fail" >> $GITHUB_OUTPUT
 
+      - name: Check test result
+        if: steps.tests.outputs.result == 'fail'
+        run: |
+          echo "❌ Tests failed!"
+          exit 1
+
       - name: Stop DPS service
         if: always()
         run: |
@@ -378,6 +385,12 @@ jobs:
         run: |
           mkdir -p compatibility-results
           
+          # Extract test summary from test-report.json if it exists (includes subtests)
+          TEST_SUMMARY=""
+          if [ -f "test-results/test-report.json" ]; then
+            TEST_SUMMARY=$(jq -c '.tests | map({name: .name, status: .status, duration: .duration, error: .error, subtests: .subtests})' test-results/test-report.json 2>/dev/null || echo "[]")
+          fi
+          
           # Build result JSON with all component versions from matrix
           # Only include versions that are actually set (not empty)
           RESULT_JSON=$(jq -n \
@@ -386,11 +399,13 @@ jobs:
             --arg snarkos "${{ matrix.snarkos_version }}" \
             --arg sdk "${{ matrix.sdk_version }}" \
             --arg dps "${{ matrix.dps_version }}" \
+            --argjson tests "${TEST_SUMMARY:-[]}" \
             '{
               snarkos_version: $snarkos,
               sdk_version: $sdk,
               result: $result,
-              timestamp: $timestamp
+              timestamp: $timestamp,
+              tests: $tests
             } + (if $dps != "" and $dps != "null" then {dps_version: $dps} else {} end)')
           
           # Build filename from component versions (only include non-empty ones)

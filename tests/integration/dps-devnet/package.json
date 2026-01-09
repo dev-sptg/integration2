@@ -7,7 +7,6 @@
     "test": "node test.js"
   },
   "dependencies": {
-    "@provablehq/sdk": "file:../../../sdk/provablehq-sdk-v0.9.11-local-local.tgz"
+    "@provablehq/sdk": "file:../../../local_build/sdk/provablehq-sdk-v0.9.14-local-local.tgz"
   }
 }
-
