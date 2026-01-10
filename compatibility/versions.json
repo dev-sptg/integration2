@@ -13,8 +13,8 @@
       "label": "SDK",
       "repo": "ProvableHQ/sdk",
       "tags": [
-        "v0.9.14",
-        "v0.9.13"
+        "v0.10.0-testnet-rc",
+        "v0.9.14"
       ],
       "branches": []
     },
@@ -22,7 +22,8 @@
       "label": "DPS",
       "repo": "provableHQ/delegated-proving-service",
       "tags": [
-        "v0.18.1"
+        "v0.18.1",
+        "v0.18.0"
       ],
       "branches": []
     }
