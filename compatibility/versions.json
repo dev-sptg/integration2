@@ -4,6 +4,7 @@
       "label": "snarkOS",
       "repo": "provableHQ/snarkOS",
       "tags": [
+        "canary-v4.5.0",
         "v4.4.0",
         "v4.3.0"
       ],
@@ -13,7 +14,6 @@
       "label": "SDK",
       "repo": "ProvableHQ/sdk",
       "tags": [
-        "v0.10.0-testnet-rc",
         "v0.9.14"
       ],
       "branches": []
