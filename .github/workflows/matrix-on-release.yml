@@ -36,6 +36,38 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSIONS_FILE="compatibility/versions.json"
+
+          fetch_latest_versions() {
+            local repo="$1"
+            local limit="$2"
+            local owner="${repo%/*}"
+            local name="${repo#*/}"
+            local query='query($owner:String!, $name:String!, $limit:Int!) { repository(owner:$owner, name:$name) { refs(refPrefix:"refs/tags/", first:$limit, orderBy:{field: TAG_COMMIT_DATE, direction: DESC}) { nodes { name } } } }'
+            local tags=""
+
+            if tags=$(gh api "repos/$repo/releases?per_page=100" --jq "[.[] | select(.draft == false) | .tag_name][0:$limit] | .[]" 2>/dev/null | tr '\n' ',' | sed 's/,$//'); then
+              if [ -n "$tags" ]; then
+                echo "$tags"
+                return 0
+              fi
+            fi
+
+            echo "WARNING: Release fetch failed for $repo, falling back to tags"
+            if tags=$(gh api graphql -f query="$query" -f owner="$owner" -f name="$name" -F limit="$limit" --jq '.data.repository.refs.nodes[].name' 2>/dev/null | tr '\n' ',' | sed 's/,$//'); then
+              if [ -n "$tags" ]; then
+                echo "$tags"
+                return 0
+              fi
+            fi
+
+            echo "WARNING: GraphQL tag fetch failed for $repo, falling back to REST"
+            tags=$(gh api "repos/$repo/tags?per_page=$limit" --jq ".[0:$limit] | .[].name" | tr '\n' ',' | sed 's/,$//')
+            if [ -z "$tags" ]; then
+              return 1
+            fi
+
+            echo "$tags"
+          }
           
           # Determine which component was released
           COMPONENT="${{ github.event.action || inputs.component }}"
@@ -49,7 +81,7 @@ jobs:
           if [ "$COMPONENT" == "snarkos-release" ] || [ "$COMPONENT" == "snarkos" ]; then
             # New snarkOS release - test against latest SDK versions
             SNARKOS_VERSIONS="$NEW_VERSION"
-            SDK_VERSIONS=$(gh api repos/ProvableHQ/sdk/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//')
+            SDK_VERSIONS=$(fetch_latest_versions "ProvableHQ/sdk" "$TEST_LATEST_N")
             
             # Also include SDK branches
             SDK_BRANCHES=$(jq -r '.sdk.branches | join(",")' "$VERSIONS_FILE")
@@ -59,7 +91,7 @@ jobs:
           else
             # New SDK release - test against latest snarkOS versions
             SDK_VERSIONS="$NEW_VERSION"
-            SNARKOS_VERSIONS=$(gh api repos/provableHQ/snarkOS/tags --jq ".[0:$TEST_LATEST_N] | .[].name" | tr '\n' ',' | sed 's/,$//')
+            SNARKOS_VERSIONS=$(fetch_latest_versions "provableHQ/snarkOS" "$TEST_LATEST_N")
             
             # Also include snarkOS branches
             SNARKOS_BRANCHES=$(jq -r '.snarkos.branches | join(",")' "$VERSIONS_FILE")
