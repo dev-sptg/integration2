@@ -4,6 +4,7 @@
       "label": "snarkOS",
       "repo": "provableHQ/snarkOS",
       "tags": [
+        "canary-v4.5.0",
         "v4.4.0",
         "v4.3.0"
       ],
@@ -32,7 +33,7 @@
       "sdk",
       "dps"
     ],
-    "test_latest_n_tags": 2,
+    "test_latest_n_tags": 3,
     "include_branches": false
   }
 }
