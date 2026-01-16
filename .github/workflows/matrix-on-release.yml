@@ -52,7 +52,7 @@ jobs:
               fi
             fi
 
-            echo "WARNING: Release fetch failed for $repo, falling back to tags"
+            echo "WARNING: Release fetch failed for $repo, falling back to tags" >&2
             if tags=$(gh api graphql -f query="$query" -f owner="$owner" -f name="$name" -F limit="$limit" --jq '.data.repository.refs.nodes[].name' 2>/dev/null | tr '\n' ',' | sed 's/,$//'); then
               if [ -n "$tags" ]; then
                 echo "$tags"
@@ -60,7 +60,7 @@ jobs:
               fi
             fi
 
-            echo "WARNING: GraphQL tag fetch failed for $repo, falling back to REST"
+            echo "WARNING: GraphQL tag fetch failed for $repo, falling back to REST" >&2
             tags=$(gh api "repos/$repo/tags?per_page=$limit" --jq ".[0:$limit] | .[].name" | tr '\n' ',' | sed 's/,$//')
             if [ -z "$tags" ]; then
               return 1

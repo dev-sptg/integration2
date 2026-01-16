@@ -35,6 +35,28 @@ jobs:
         id: version
         run: |
           REF="${{ inputs.ref }}"
+          
+          # Guard against accidentally receiving multi-line refs (e.g. polluted config output).
+          # If multi-line, take the last non-empty line.
+          if [[ "$REF" == *$'\n'* ]]; then
+            SANITIZED=""
+            while IFS= read -r line; do
+              # Trim leading/trailing whitespace for emptiness check
+              trimmed="${line#"${line%%[![:space:]]*}"}"
+              trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+              if [ -n "$trimmed" ]; then
+                SANITIZED="$trimmed"
+              fi
+            done <<< "$REF"
+            REF="$SANITIZED"
+          fi
+          
+          # Strip any remaining CR/LF and surrounding whitespace
+          REF="${REF//$'\r'/}"
+          REF="${REF//$'\n'/}"
+          REF="${REF#"${REF%%[![:space:]]*}"}"
+          REF="${REF%"${REF##*[![:space:]]}"}"
+
           if [ -z "$REF" ]; then
             # No ref specified - get latest commit from default branch
             REF="default-$(date +%Y%m%d)"
