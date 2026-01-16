@@ -4,8 +4,8 @@
       "label": "snarkOS",
       "repo": "provableHQ/snarkOS",
       "tags": [
-        "canary-v4.5.0",
         "v4.4.0",
+        "testnet-v4.4.0",
         "v4.3.0"
       ],
       "branches": []
@@ -14,7 +14,9 @@
       "label": "SDK",
       "repo": "ProvableHQ/sdk",
       "tags": [
-        "v0.9.14"
+        "v0.9.14",
+        "v0.9.13",
+        "v0.9.12"
       ],
       "branches": []
     },
@@ -22,8 +24,10 @@
       "label": "DPS",
       "repo": "provableHQ/delegated-proving-service",
       "tags": [
-        "v0.19.0",
-        "v0.18.1"
+        "WARNING: Release fetch failed for provableHQ/delegated-proving-service",
+        " falling back to tags\nv0.19.0",
+        "v0.18.1",
+        "v0.18.0"
       ],
       "branches": []
     }
