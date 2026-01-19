@@ -312,18 +312,21 @@ gh workflow run compatibility-matrix.yml \
 
 **Integration test failures**:
 - Review test reports in workflow artifacts (7-day retention)
-- Download `integration-test-report` artifact
+- Download `test-report-snarkos-{version}-sdk-{version}-dps-{version}` artifact
+- Download `service-logs-snarkos-{version}-sdk-{version}-dps-{version}` artifact for snarkOS and DPS logs
 - Check GitHub step summary for overview
 - Verify local package versions have `-local-<commit>` markers
 
 **DevNet issues in CI**:
-- Check devnet logs: `/tmp/snarkos-devnet-logs/validator-*.log`
+- Check devnet logs: `/tmp/snarkos-devnet-logs/validator-*.log` (collected in `service-logs-*` artifact)
+- Download `service-logs-snarkos-{version}-sdk-{version}-dps-{version}` artifact from workflow run
 - Verify all 4 validators started
 - DevNet requires 120s timeout for validators to sync
 - REST API endpoint: `http://localhost:3030/v2/testnet/block/height/latest`
 
 **DPS issues in CI**:
-- Check DPS logs: `/tmp/dps-logs/dps.log`
+- Check DPS logs: `/tmp/dps-logs/dps.log` (collected in `service-logs-*` artifact)
+- Download `service-logs-snarkos-{version}-sdk-{version}-dps-{version}` artifact from workflow run
 - DPS endpoint: `http://localhost:3000/prove`
 - Verify DPS binary has execute permission
 
@@ -382,12 +385,20 @@ gh workflow run compatibility-matrix.yml \
 - 120s timeout for validators to sync
 - REST API: `http://localhost:3030/v2/testnet/block/height/latest`
 - Cleanup always runs via `stop-devnet.sh`
+- Logs collected and uploaded as artifacts: `/tmp/snarkos-devnet-logs/validator-*.log`
 
 **DPS in CI**:
 - Started via `start-dps.sh`
 - Connects to local devnet on port 3030
 - Proves endpoint: `http://localhost:3000/prove`
 - Logs in `/tmp/dps-logs/dps.log`
+- Logs collected and uploaded as artifacts
+
+**Artifacts**:
+- `test-report-snarkos-{version}-sdk-{version}-dps-{version}`: Test results and traces (7-day retention)
+- `service-logs-snarkos-{version}-sdk-{version}-dps-{version}`: snarkOS devnet and DPS service logs (7-day retention)
+- `compat-result-{version}-{version}-{version}`: Individual test results for aggregation (7-day retention)
+- `compatibility-dashboard`: Dashboard files for Cloudflare Pages deployment (30-day retention)
 
 **Testing Strategy**:
 - Tests are non-blocking: always exit 0 to not fail pipeline

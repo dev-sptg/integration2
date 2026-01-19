@@ -404,6 +404,50 @@ jobs:
           chmod +x tests/setup/stop-devnet.sh
           ./tests/setup/stop-devnet.sh || true
 
+      - name: Collect service logs
+        if: always()
+        run: |
+          mkdir -p service-logs
+          
+          # Collect snarkOS devnet logs
+          if [ -d "/tmp/snarkos-devnet-logs" ]; then
+            cp -r /tmp/snarkos-devnet-logs service-logs/snarkos-devnet-logs
+            echo "✅ Collected snarkOS devnet logs"
+          else
+            echo "⚠️ No snarkOS devnet logs found"
+          fi
+          
+          # Collect DPS logs
+          if [ -d "/tmp/dps-logs" ]; then
+            cp -r /tmp/dps-logs service-logs/dps-logs
+            echo "✅ Collected DPS logs"
+          else
+            echo "⚠️ No DPS logs found"
+          fi
+          
+          # Create a summary file
+          echo "Service Logs Summary" > service-logs/README.md
+          echo "===================" >> service-logs/README.md
+          echo "" >> service-logs/README.md
+          echo "Test Configuration:" >> service-logs/README.md
+          echo "- snarkOS: ${{ matrix.snarkos_version }}" >> service-logs/README.md
+          echo "- SDK: ${{ matrix.sdk_version }}" >> service-logs/README.md
+          echo "- DPS: ${{ matrix.dps_version }}" >> service-logs/README.md
+          echo "- Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> service-logs/README.md
+          echo "" >> service-logs/README.md
+          echo "Log Files:" >> service-logs/README.md
+          find service-logs -type f -name "*.log" | while read log; do
+            echo "- $(basename $log): $(wc -l < $log) lines" >> service-logs/README.md
+          done
+
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: service-logs-snarkos-${{ matrix.snarkos_version }}-sdk-${{ matrix.sdk_version }}-dps-${{ matrix.dps_version }}
+          path: service-logs/
+          retention-days: 7
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v5

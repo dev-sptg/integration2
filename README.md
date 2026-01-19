@@ -75,6 +75,7 @@ Tests run automatically on push/PR to `master` branch.
 - **Smart caching**: Rust cache (Swatinem) and yarn cache
 - **DevNet automation**: Full devnet lifecycle management in CI
 - **Non-blocking tests**: Pipeline doesn't fail, collects all results
+- **Log collection**: snarkOS and DPS logs automatically uploaded as artifacts for debugging
 
 ### GitHub Actions Runners
 
