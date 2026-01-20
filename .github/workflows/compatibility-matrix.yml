@@ -12,35 +12,40 @@ on:
         required: false
         type: boolean
         default: false
-      snarkos_versions:
-        description: 'snarkOS versions (comma-separated tags/branches, e.g., "v4.4.0,v4.3.0,mainnet")'
+      snarkos:
+        description: 'snarkOS version (tag, branch, or commit SHA, e.g., "v4.4.0", "mainnet", "a1b2c3d")'
         required: false
         type: string
         default: ''
-      sdk_versions:
-        description: 'SDK versions (comma-separated tags/branches, e.g., "v0.9.12,v0.9.11,mainnet")'
+      sdk:
+        description: 'SDK version (tag, branch, or commit SHA)'
         required: false
         type: string
         default: ''
-      dps_versions:
-        description: 'DPS versions (comma-separated tags/branches, e.g., "v0.17.0,v0.16.0,testnet")'
+      dps:
+        description: 'DPS version (tag, branch, or commit SHA, optional)'
         required: false
         type: string
         default: ''
   workflow_call:
     inputs:
-      snarkos_versions:
-        description: 'snarkOS versions (comma-separated)'
+      test_latest_only:
+        description: 'Test only latest versions (skip older tags)'
+        required: false
+        type: boolean
+        default: false
+      snarkos:
+        description: 'snarkOS version (tag, branch, or commit SHA)'
         required: false
         type: string
         default: ''
-      sdk_versions:
-        description: 'SDK versions (comma-separated)'
+      sdk:
+        description: 'SDK version (tag, branch, or commit SHA)'
         required: false
         type: string
         default: ''
-      dps_versions:
-        description: 'DPS versions (comma-separated)'
+      dps:
+        description: 'DPS version (tag, branch, or commit SHA, optional)'
         required: false
         type: string
         default: ''
@@ -57,6 +62,9 @@ jobs:
       contents: write
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      report_id: ${{ steps.set-matrix.outputs.report_id }}
+      metadata_json: ${{ steps.set-matrix.outputs.metadata_json }}
+      standalone_mode: ${{ steps.set-matrix.outputs.standalone_mode }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -68,6 +76,242 @@ jobs:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN != '' && secrets.MY_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+
+          # Helper function to detect if input is a commit SHA
+          is_commit_sha() {
+            echo "$1" | grep -qE '^[a-fA-F0-9]{7,40}$'
+          }
+
+          # Read versions config for repo URLs
+            VERSIONS_FILE="compatibility/versions.json"
+          MATRIX_FILE="compatibility/matrix.json"
+
+          # Get unified inputs
+          SNARKOS_INPUT="${{ inputs.snarkos }}"
+          SDK_INPUT="${{ inputs.sdk }}"
+          DPS_INPUT="${{ inputs.dps }}"
+
+          # Auto-detect mode: if ANY input looks like a commit SHA, use standalone mode
+          STANDALONE_MODE="false"
+          if [ -n "$SNARKOS_INPUT" ] && is_commit_sha "$SNARKOS_INPUT"; then
+            STANDALONE_MODE="true"
+          elif [ -n "$SDK_INPUT" ] && is_commit_sha "$SDK_INPUT"; then
+            STANDALONE_MODE="true"
+          elif [ -n "$DPS_INPUT" ] && is_commit_sha "$DPS_INPUT"; then
+            STANDALONE_MODE="true"
+          fi
+
+          # Check for standalone mode (on-demand testing with commit SHAs)
+          if [ "$STANDALONE_MODE" == "true" ]; then
+            echo "🔧 Running in standalone mode (on-demand testing)"
+
+            # Generate report ID (timestamp only)
+            REPORT_ID="$(date +%Y%m%d-%H%M%S)"
+            echo "report_id=$REPORT_ID" >> $GITHUB_OUTPUT
+
+            # Track components and metadata
+            COMPONENTS=()
+            METADATA_OBJ="{}"
+            SNARKOS_REF=""
+            SDK_REF=""
+            DPS_REF=""
+
+            # Process snarkOS input
+            if [ -n "$SNARKOS_INPUT" ]; then
+              if is_commit_sha "$SNARKOS_INPUT"; then
+                # It's a commit SHA - validate it
+              REPO=$(jq -r '.components.snarkos.repo' "$VERSIONS_FILE")
+                echo "Validating snarkOS commit: $SNARKOS_INPUT"
+                if RESULT=$(scripts/validate-commit-sha.sh "$REPO" "$SNARKOS_INPUT"); then
+                SNARKOS_REF=$(echo "$RESULT" | jq -r '.sha')
+                METADATA_OBJ=$(echo "$METADATA_OBJ" | jq --argjson m "$RESULT" '.snarkos = $m')
+                COMPONENTS+=("snarkos")
+                echo "✅ snarkOS: $SNARKOS_REF"
+              else
+                echo "❌ Invalid snarkOS commit"
+                echo "$RESULT" | jq -r '.error'
+                exit 1
+              fi
+            else
+                # It's a tag/branch - use as-is
+                SNARKOS_REF="$SNARKOS_INPUT"
+                COMPONENTS+=("snarkos")
+                echo "✅ snarkOS: $SNARKOS_REF (tag/branch)"
+              fi
+            fi
+
+            # Process SDK input
+            if [ -n "$SDK_INPUT" ]; then
+              if is_commit_sha "$SDK_INPUT"; then
+                # It's a commit SHA - validate it
+              REPO=$(jq -r '.components.sdk.repo' "$VERSIONS_FILE")
+                echo "Validating SDK commit: $SDK_INPUT"
+                if RESULT=$(scripts/validate-commit-sha.sh "$REPO" "$SDK_INPUT"); then
+                SDK_REF=$(echo "$RESULT" | jq -r '.sha')
+                METADATA_OBJ=$(echo "$METADATA_OBJ" | jq --argjson m "$RESULT" '.sdk = $m')
+                COMPONENTS+=("sdk")
+                echo "✅ SDK: $SDK_REF"
+              else
+                echo "❌ Invalid SDK commit"
+                echo "$RESULT" | jq -r '.error'
+                exit 1
+              fi
+            else
+                # It's a tag/branch - use as-is
+                SDK_REF="$SDK_INPUT"
+                COMPONENTS+=("sdk")
+                echo "✅ SDK: $SDK_REF (tag/branch)"
+              fi
+            fi
+
+            # Process DPS input
+            if [ -n "$DPS_INPUT" ]; then
+              if is_commit_sha "$DPS_INPUT"; then
+                # It's a commit SHA - validate it
+              REPO=$(jq -r '.components.dps.repo' "$VERSIONS_FILE")
+                echo "Validating DPS commit: $DPS_INPUT"
+                if RESULT=$(scripts/validate-commit-sha.sh "$REPO" "$DPS_INPUT"); then
+                DPS_REF=$(echo "$RESULT" | jq -r '.sha')
+                METADATA_OBJ=$(echo "$METADATA_OBJ" | jq --argjson m "$RESULT" '.dps = $m')
+                COMPONENTS+=("dps")
+                echo "✅ DPS: $DPS_REF"
+              else
+                echo "❌ Invalid DPS commit"
+                echo "$RESULT" | jq -r '.error'
+                exit 1
+              fi
+            else
+                # It's a tag/branch - use as-is
+                DPS_REF="$DPS_INPUT"
+                COMPONENTS+=("dps")
+                echo "✅ DPS: $DPS_REF (tag/branch)"
+              fi
+            fi
+
+            # Check if we have at least one component
+            COMPONENT_COUNT=${#COMPONENTS[@]}
+            if [ $COMPONENT_COUNT -eq 0 ]; then
+              echo "❌ Error: At least one component must be specified"
+              exit 1
+            fi
+
+            # If only one component provided, fetch defaults from matrix.json
+            if [ $COMPONENT_COUNT -eq 1 ]; then
+              echo "📋 Only one component specified, fetching defaults from matrix.json..."
+              
+              if [ -f "$MATRIX_FILE" ]; then
+                # Find the most recent passing result
+                LATEST_PASS=$(jq -r '.results | map(select(.result == "pass")) | sort_by(.timestamp) | reverse | .[0]' "$MATRIX_FILE" 2>/dev/null || echo "null")
+                
+                if [ "$LATEST_PASS" != "null" ] && [ -n "$LATEST_PASS" ]; then
+                  # Extract missing component versions
+                  if [ -z "$SNARKOS_REF" ]; then
+                    SNARKOS_REF=$(echo "$LATEST_PASS" | jq -r '.snarkos_version // empty')
+                    if [ -n "$SNARKOS_REF" ]; then
+                      COMPONENTS+=("snarkos")
+                      echo "📌 Using snarkOS from matrix.json: $SNARKOS_REF"
+                    fi
+                  fi
+                  
+                  if [ -z "$SDK_REF" ]; then
+                    SDK_REF=$(echo "$LATEST_PASS" | jq -r '.sdk_version // empty')
+                    if [ -n "$SDK_REF" ]; then
+                      COMPONENTS+=("sdk")
+                      echo "📌 Using SDK from matrix.json: $SDK_REF"
+                    fi
+                  fi
+                  
+                  if [ -z "$DPS_REF" ]; then
+                    DPS_REF=$(echo "$LATEST_PASS" | jq -r '.dps_version // empty')
+                    if [ -n "$DPS_REF" ]; then
+                      COMPONENTS+=("dps")
+                      echo "📌 Using DPS from matrix.json: $DPS_REF"
+                    fi
+                  fi
+                else
+                  echo "⚠️ No passing results found in matrix.json, falling back to versions.json"
+                  # Fallback to latest from versions.json
+                  if [ -z "$SNARKOS_REF" ]; then
+                    SNARKOS_REF=$(jq -r '.components.snarkos.tags[0] // empty' "$VERSIONS_FILE")
+                    if [ -n "$SNARKOS_REF" ]; then
+                      COMPONENTS+=("snarkos")
+                      echo "📌 Using latest snarkOS from versions.json: $SNARKOS_REF"
+                    fi
+                  fi
+                  if [ -z "$SDK_REF" ]; then
+                    SDK_REF=$(jq -r '.components.sdk.tags[0] // empty' "$VERSIONS_FILE")
+                    if [ -n "$SDK_REF" ]; then
+                      COMPONENTS+=("sdk")
+                      echo "📌 Using latest SDK from versions.json: $SDK_REF"
+                    fi
+                  fi
+                  if [ -z "$DPS_REF" ]; then
+                    DPS_REF=$(jq -r '.components.dps.tags[0] // empty' "$VERSIONS_FILE")
+                    if [ -n "$DPS_REF" ]; then
+                      COMPONENTS+=("dps")
+                      echo "📌 Using latest DPS from versions.json: $DPS_REF"
+                    fi
+                  fi
+                fi
+              else
+                echo "⚠️ matrix.json not found, falling back to versions.json"
+                # Fallback to latest from versions.json
+                if [ -z "$SNARKOS_REF" ]; then
+                  SNARKOS_REF=$(jq -r '.components.snarkos.tags[0] // empty' "$VERSIONS_FILE")
+                  if [ -n "$SNARKOS_REF" ]; then
+                    COMPONENTS+=("snarkos")
+                    echo "📌 Using latest snarkOS from versions.json: $SNARKOS_REF"
+                  fi
+                fi
+                if [ -z "$SDK_REF" ]; then
+                  SDK_REF=$(jq -r '.components.sdk.tags[0] // empty' "$VERSIONS_FILE")
+                  if [ -n "$SDK_REF" ]; then
+                    COMPONENTS+=("sdk")
+                    echo "📌 Using latest SDK from versions.json: $SDK_REF"
+                  fi
+                fi
+                if [ -z "$DPS_REF" ]; then
+                  DPS_REF=$(jq -r '.components.dps.tags[0] // empty' "$VERSIONS_FILE")
+                  if [ -n "$DPS_REF" ]; then
+                    COMPONENTS+=("dps")
+                    echo "📌 Using latest DPS from versions.json: $DPS_REF"
+                  fi
+                fi
+              fi
+            fi
+
+            # Validate at least 2 components after fallback
+            COMPONENT_COUNT=${#COMPONENTS[@]}
+            if [ $COMPONENT_COUNT -lt 2 ]; then
+              echo "❌ Error: At least two components must be specified (after fallback: $COMPONENT_COUNT)"
+              exit 1
+            fi
+
+            # Save metadata as output
+            echo "metadata_json=$(echo "$METADATA_OBJ" | jq -c .)" >> $GITHUB_OUTPUT
+
+            # Build simple matrix for standalone mode
+            MATRIX_OBJ="{}"
+            if [ -n "$SNARKOS_REF" ]; then
+              MATRIX_OBJ=$(echo "$MATRIX_OBJ" | jq --arg v "$SNARKOS_REF" '. + {snarkos_version: [$v]}')
+            fi
+            if [ -n "$SDK_REF" ]; then
+              MATRIX_OBJ=$(echo "$MATRIX_OBJ" | jq --arg v "$SDK_REF" '. + {sdk_version: [$v]}')
+            fi
+            if [ -n "$DPS_REF" ]; then
+              MATRIX_OBJ=$(echo "$MATRIX_OBJ" | jq --arg v "$DPS_REF" '. + {dps_version: [$v]}')
+            fi
+
+            echo "Generated matrix for standalone mode:"
+            echo "$MATRIX_OBJ" | jq .
+
+            echo "matrix=$(echo "$MATRIX_OBJ" | jq -c .)" >> $GITHUB_OUTPUT
+            echo "standalone_mode=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Original matrix generation logic for non-standalone mode
+          echo "🔄 Running in matrix mode (scheduled/PR testing)"
 
           fetch_latest_versions() {
             local repo="$1"
@@ -132,12 +376,12 @@ jobs:
             
             # Check for manual input override (handle known components explicitly)
             # For new components, add input parameters to workflow and handle here
-            if [ "$COMPONENT" == "snarkos" ] && [ -n "${{ inputs.snarkos_versions }}" ]; then
-              COMPONENT_VERSIONS="${{ inputs.snarkos_versions }}"
-            elif [ "$COMPONENT" == "sdk" ] && [ -n "${{ inputs.sdk_versions }}" ]; then
-              COMPONENT_VERSIONS="${{ inputs.sdk_versions }}"
-            elif [ "$COMPONENT" == "dps" ] && [ -n "${{ inputs.dps_versions }}" ]; then
-              COMPONENT_VERSIONS="${{ inputs.dps_versions }}"
+            if [ "$COMPONENT" == "snarkos" ] && [ -n "${{ inputs.snarkos }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.snarkos }}"
+            elif [ "$COMPONENT" == "sdk" ] && [ -n "${{ inputs.sdk }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.sdk }}"
+            elif [ "$COMPONENT" == "dps" ] && [ -n "${{ inputs.dps }}" ]; then
+              COMPONENT_VERSIONS="${{ inputs.dps }}"
             elif [ "$SHOULD_FETCH" == "true" ]; then
               # Fetch from GitHub API
               REPO=$(jq -r ".components[\"$COMPONENT\"].repo" "$VERSIONS_FILE")
@@ -203,7 +447,7 @@ jobs:
                     break
                   fi
                   echo "Push failed, attempt $i/5 - pulling and retrying..."
-                  git pull --rebase origin ${{ github.ref_name }}
+                  git pull --strategy-option theirs origin ${{ github.ref_name }}
                   sleep $((i * 2))
                 done
                 
@@ -227,6 +471,7 @@ jobs:
           echo "$MATRIX_OBJ" | jq .
           
           echo "matrix=$MATRIX_COMPACT" >> $GITHUB_OUTPUT
+          echo "standalone_mode=false" >> $GITHUB_OUTPUT
 
   # Build all snarkOS versions in parallel
   build-snarkos:
@@ -522,21 +767,31 @@ jobs:
           path: all-results
           merge-multiple: true
 
-      - name: Aggregate results into matrix.json
+      - name: Download service logs (standalone mode)
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          pattern: service-logs-*
+          path: all-logs
+          merge-multiple: true
+
+      - name: Aggregate results into matrix.json (skip in standalone mode)
+        if: needs.generate-matrix.outputs.standalone_mode != 'true'
         run: |
           # Read existing matrix or create new one
           MATRIX_FILE="compatibility/matrix.json"
           VERSIONS_FILE="compatibility/versions.json"
-          
+
           if [ -f "$MATRIX_FILE" ]; then
             EXISTING=$(cat "$MATRIX_FILE")
           else
             EXISTING='{"last_updated": null, "results": []}'
           fi
-          
+
           # Get component list from config
           COMPONENT_KEYS=$(jq -r '.components | keys[]' "$VERSIONS_FILE")
-          
+
           # Collect all new results
           NEW_RESULTS="[]"
           for result_file in all-results/*.json; do
@@ -544,39 +799,40 @@ jobs:
               NEW_RESULTS=$(echo "$NEW_RESULTS" | jq --slurpfile new "$result_file" '. + $new')
             fi
           done
-          
+
           # Build sort keys array for jq
           SORT_KEYS_ARRAY="[]"
           for COMPONENT in $COMPONENT_KEYS; do
             VERSION_KEY="${COMPONENT}_version"
             SORT_KEYS_ARRAY=$(echo "$SORT_KEYS_ARRAY" | jq --arg key "$VERSION_KEY" '. + [$key]')
           done
-          
+
           # Merge with existing results (update existing, add new)
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          
+
           # Merge: keep old results that have all versions and don't match new ones, then add new results
           JQ_FILTER='.last_updated = $ts | .results = ([.results[] | . as $old | if ($sort_keys | all(. as $key | $old[$key] != null and $old[$key] != "" and $old[$key] != "null")) then if ($new | map(. as $n | $sort_keys | all(. as $key | $old[$key] == $n[$key])) | any) then empty else $old end else empty end] + $new) | .results |= sort_by([$sort_keys[] as $key | .[$key]])'
-          
+
           MERGED=$(echo "$EXISTING" | jq \
             --argjson new "$NEW_RESULTS" \
             --argjson sort_keys "$SORT_KEYS_ARRAY" \
             --arg ts "$TIMESTAMP" \
             "$JQ_FILTER")
-          
+
           echo "$MERGED" | jq . > "$MATRIX_FILE"
-          
+
           echo "Updated matrix.json:"
           cat "$MATRIX_FILE"
 
-      - name: Commit updated matrix
+      - name: Commit updated matrix (skip in standalone mode)
+        if: needs.generate-matrix.outputs.standalone_mode != 'true'
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             git config --local user.email "github-actions[bot]@users.noreply.github.com"
             git config --local user.name "github-actions[bot]"
             git add compatibility/matrix.json
             git diff --staged --quiet || git commit -m "Update compatibility matrix [skip ci]"
-            
+
             # Retry push with pull --rebase to handle concurrent updates
             PUSH_SUCCESS=false
             for i in 1 2 3 4 5; do
@@ -586,10 +842,10 @@ jobs:
                 break
               fi
               echo "Push failed, attempt $i/5 - pulling and retrying..."
-              git pull --rebase origin ${{ github.ref_name }}
+              git pull --strategy-option theirs origin ${{ github.ref_name }}
               sleep $((i * 2))
             done
-  
+
             if [ "$PUSH_SUCCESS" = "false" ]; then
               echo "❌ Failed to push changes after 5 attempts"
               exit 1
@@ -598,14 +854,15 @@ jobs:
             echo "Skipping commit/push on pull request"
           fi
 
-      - name: Generate GitHub summary
+      - name: Generate GitHub summary (matrix mode)
+        if: needs.generate-matrix.outputs.standalone_mode != 'true'
         run: |
           VERSIONS_FILE="compatibility/versions.json"
           MATRIX_FILE="compatibility/matrix.json"
-          
+
           # Get component list and build header dynamically
           COMPONENT_KEYS=$(jq -r '.components | keys[]' "$VERSIONS_FILE")
-          
+
           # Build header row
           HEADER_PARTS=""
           SEPARATOR_PARTS=""
@@ -640,7 +897,254 @@ jobs:
             " |"
           ' "$MATRIX_FILE" >> $GITHUB_STEP_SUMMARY
 
+      - name: Generate standalone report (standalone mode only)
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        run: |
+          REPORT_ID="${{ needs.generate-matrix.outputs.report_id }}"
+
+          # Read metadata from generate-matrix outputs
+          METADATA='${{ needs.generate-matrix.outputs.metadata_json }}'
+
+          # Read test results
+          # Test files are named result-{snarkos}-{sdk}-{dps}.json
+          RESULT_FILE=$(find all-results -name "result-*.json" -type f | head -1)
+          if [ -n "$RESULT_FILE" ]; then
+            RAW_RESULTS=$(cat "$RESULT_FILE")
+          else
+            RAW_RESULTS='{"error": "No test results found"}'
+          fi
+
+          # Transform test results to match expected format for renderResults
+          # Expected: {snarkos_version, sdk_version, dps_version, result, tests, timestamp}
+          # Raw has: {summary, duration, tests, timestamp}
+          SNARKOS_VER=$(echo "$METADATA" | jq -r '.snarkos.sha // empty')
+          SDK_VER=$(echo "$METADATA" | jq -r '.sdk.sha // empty')
+          DPS_VER=$(echo "$METADATA" | jq -r '.dps.sha // empty')
+
+          # Compute pass/fail from summary
+          FAILED_COUNT=$(echo "$RAW_RESULTS" | jq -r '.summary.failed // 0')
+          if [ "$FAILED_COUNT" -gt 0 ] 2>/dev/null; then
+            RESULT_STATUS="fail"
+          else
+            RESULT_STATUS="pass"
+          fi
+
+          # Build transformed result with version fields
+          TRANSFORMED_RESULT=$(jq -n \
+            --arg snarkos "$SNARKOS_VER" \
+            --arg sdk "$SDK_VER" \
+            --arg dps "$DPS_VER" \
+            --arg result "$RESULT_STATUS" \
+            --argjson raw "$RAW_RESULTS" \
+            '{
+              snarkos_version: $snarkos,
+              sdk_version: $sdk,
+              result: $result,
+              timestamp: $raw.timestamp,
+              tests: $raw.tests
+            } + (if $dps != "" then {dps_version: $dps} else {} end)')
+
+          # Create combined data
+          DATA=$(jq -n \
+            --argjson metadata "$METADATA" \
+            --argjson results "[$TRANSFORMED_RESULT]" \
+            --arg report_id "$REPORT_ID" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              report_id: $report_id,
+              timestamp: $timestamp,
+              metadata: $metadata,
+              results: $results
+            }')
+
+          # Generate standalone HTML
+          scripts/generate-standalone-dashboard.sh "$DATA" "on-demand-report-${REPORT_ID}.html"
+
+      - name: Upload standalone report (standalone mode only)
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: on-demand-report-${{ needs.generate-matrix.outputs.report_id }}
+          path: on-demand-report-*.html
+          retention-days: 30
+
+      - name: Generate GitHub summary (standalone mode)
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        run: |
+          REPORT_ID="${{ needs.generate-matrix.outputs.report_id }}"
+          # Construct URL dynamically based on branch (replace / with - for Cloudflare Pages)
+          BRANCHSlug="${{ github.ref_name }}"
+          BRANCHSlug="${BRANCHSlug//\//-}"
+          REPORT_URL="https://${BRANCHSlug}.e2e-testing-standalone.pages.dev/reports/${REPORT_ID}/"
+          METADATA='${{ needs.generate-matrix.outputs.metadata_json }}'
+
+          echo "## 🧪 On-Demand Compatibility Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 [View Full Report](${REPORT_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Report ID:** \`${REPORT_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add commit metadata
+          if [ -n "$METADATA" ]; then
+            echo "### 🔖 Component Versions" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if echo "$METADATA" | jq -e '.snarkos' > /dev/null; then
+              SNARKOS_SHA=$(echo "$METADATA" | jq -r '.snarkos.sha')
+              SNARKOS_MSG=$(echo "$METADATA" | jq -r '.snarkos.message' | head -c 60)
+              echo "- **snarkOS:** \`$SNARKOS_SHA\`" >> $GITHUB_STEP_SUMMARY
+              echo "  - *${SNARKOS_MSG}...*" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if echo "$METADATA" | jq -e '.sdk' > /dev/null; then
+              SDK_SHA=$(echo "$METADATA" | jq -r '.sdk.sha')
+              SDK_MSG=$(echo "$METADATA" | jq -r '.sdk.message' | head -c 60)
+              echo "- **SDK:** \`$SDK_SHA\`" >> $GITHUB_STEP_SUMMARY
+              echo "  - *${SDK_MSG}...*" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if echo "$METADATA" | jq -e '.dps' > /dev/null; then
+              DPS_SHA=$(echo "$METADATA" | jq -r '.dps.sha')
+              DPS_MSG=$(echo "$METADATA" | jq -r '.dps.message' | head -c 60)
+              echo "- **DPS:** \`$DPS_SHA\`" >> $GITHUB_STEP_SUMMARY
+              echo "  - *${DPS_MSG}...*" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Add test results summary
+          if [ -f "all-results/result.json" ]; then
+            RESULT=$(cat all-results/result.json)
+            RESULT_STATUS=$(echo "$RESULT" | jq -r '.result')
+            TESTS=$(echo "$RESULT" | jq -r '.tests // []')
+            TOTAL_TESTS=$(echo "$TESTS" | jq 'length')
+            PASSED_TESTS=$(echo "$TESTS" | jq '[.[] | select(.status == "passed")] | length')
+            FAILED_TESTS=$(echo "$TESTS" | jq '[.[] | select(.status == "failed")] | length')
+
+            echo "### 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$RESULT_STATUS" = "pass" ]; then
+              echo "### ✅ Overall Result: **PASSED**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### ❌ Overall Result: **FAILED**" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total Tests | ${TOTAL_TESTS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | ${PASSED_TESTS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | ${FAILED_TESTS} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Add test details
+            if [ "$TESTS" != "[]" ]; then
+              echo "### 📋 Test Details" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Test | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+              echo "|------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+              echo "$TESTS" | jq -r '.[] | "| `\(.name)` | " + (if .status == "passed" then "✅ Passed" elif .status == "failed" then "❌ Failed" else "⚠️ Skipped" end) + " | \(.duration // "-") |"' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download Full Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The detailed HTML report is also available as a workflow artifact." >> $GITHUB_STEP_SUMMARY
+          echo "Scroll down to the **Artifacts** section to download \`on-demand-report-${REPORT_ID}.html\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Prepare standalone report for Cloudflare Pages
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        run: |
+          REPORT_ID="${{ needs.generate-matrix.outputs.report_id }}"
+
+          # Create directory structure for Cloudflare Pages
+          # This creates: reports/{report_id}/index.html
+          mkdir -p reports-dist/reports/$REPORT_ID
+
+          # Copy the standalone report as index.html
+          cp on-demand-report-${REPORT_ID}.html reports-dist/reports/$REPORT_ID/index.html
+
+          # Copy a redirect page to root (optional, for convenience)
+          cat > reports-dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=/reports/" />
+            <title>Redirecting...</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="/reports/">reports</a>...</p>
+          </body>
+          </html>
+          EOF
+
+          # Create a reports listing page that redirects to the latest report
+          cat > reports-dist/reports/index.html << EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=/$REPORT_ID/" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Redirecting to latest report...</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #0a0a0f; color: #e8e8f0; text-align: center; }
+              a { color: #00d4ff; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .spinner { border: 3px solid #2a2a3a; border-top: 3px solid #00d4ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+          </head>
+          <body>
+            <div class="spinner"></div>
+            <p>Redirecting to latest report: <code>$REPORT_ID</code></p>
+            <p><a href="/$REPORT_ID/">Click here if not redirected</a></p>
+          </body>
+          </html>
+          EOF
+
+          echo "✅ Prepared Cloudflare Pages deployment structure"
+
+      - name: Deploy standalone report to Cloudflare Pages
+        id: deploy
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy reports-dist --project-name=e2e-testing-standalone
+
+      - name: Update GitHub summary with report URL
+        if: needs.generate-matrix.outputs.standalone_mode == 'true'
+        run: |
+          REPORT_ID="${{ needs.generate-matrix.outputs.report_id }}"
+          # Use the deployment alias URL (branch-specific) from wrangler output, fallback to construct it
+          DEPLOYMENT_URL="${{ steps.deploy.outputs.url }}"
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            # wrangler returns the deployment URL (e.g., https://feat-on-demand.e2e-testing-standalone.pages.dev)
+            REPORT_URL="${DEPLOYMENT_URL}/reports/${REPORT_ID}/"
+          else
+            # Fallback: construct from project name and current branch (replace / with -)
+            BRANCHSlug="${{ github.ref_name }}"
+            BRANCHSlug="${BRANCHSlug//\//-}"
+            REPORT_URL="https://${BRANCHSlug}.e2e-testing-standalone.pages.dev/reports/${REPORT_ID}/"
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Published Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Report URL:** [${REPORT_URL}](${REPORT_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The report has been published and is accessible at the URL above." >> $GITHUB_STEP_SUMMARY
+
       - name: Prepare dashboard for download
+        if: needs.generate-matrix.outputs.standalone_mode != 'true'
         run: |
           mkdir -p dashboard-dist
           cp compatibility/dashboard/* dashboard-dist/
@@ -657,9 +1161,10 @@ jobs:
 
   # Deploy dashboard to Cloudflare Pages
   # Note: Skipped on PRs because secrets are not available for fork PRs
+  # Also skipped in standalone mode (on-demand tests generate their own report)
   deploy-dashboard:
     needs: aggregate-results
-    if: always() && needs.aggregate-results.result == 'success' && github.event_name != 'pull_request'
+    if: always() && needs.aggregate-results.result == 'success' && github.event_name != 'pull_request' && needs.generate-matrix.outputs.standalone_mode != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

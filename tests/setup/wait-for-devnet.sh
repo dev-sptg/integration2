@@ -87,8 +87,8 @@ while (( total_wait < MAX_WAIT_CONSENSUS )); do
         exit 0
     fi
     
-    sleep 30
-    total_wait=$((total_wait + 30))
+    sleep 10
+    total_wait=$((total_wait + 10))
     
     if (( total_wait < MAX_WAIT_CONSENSUS )); then
         echo "   Waited ${total_wait}s so far... (timeout in $((MAX_WAIT_CONSENSUS - total_wait))s)"
