@@ -93,7 +93,6 @@ jobs:
       - name: Install SDK dependencies
         if: steps.build-cache.outputs.cache-hit != 'true'
         working-directory: sdk
-        # TODO: switch back to run: yarn install --frozen-lockfile
         run: yarn install --immutable --check-cache
 
       - name: Build SDK

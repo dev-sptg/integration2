@@ -8,7 +8,6 @@ set -e
 #   - deploy: Prepare dashboard and deploy to Cloudflare Pages
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DASHBOARD_DIST="$SCRIPT_DIR/dashboard-dist"
 
 # Colors for output

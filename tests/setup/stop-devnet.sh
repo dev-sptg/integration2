@@ -9,7 +9,7 @@ if [ ! -f "$PID_FILE" ]; then
 fi
 
 # Read all PIDs (space-separated)
-PIDS=($(cat "$PID_FILE"))
+read -r -a PIDS < "$PID_FILE"
 
 echo "Stopping devnet validators..."
 for DEVNET_PID in "${PIDS[@]}"; do
@@ -18,7 +18,7 @@ for DEVNET_PID in "${PIDS[@]}"; do
         kill "$DEVNET_PID" 2>/dev/null || true
         
         # Wait up to 3 seconds for graceful shutdown
-        for i in {1..3}; do
+        for _ in {1..3}; do
             if ! ps -p "$DEVNET_PID" > /dev/null 2>&1; then
                 break
             fi

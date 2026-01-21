@@ -626,6 +626,11 @@ jobs:
           chmod +x tests/setup/start-dps.sh
           ./tests/setup/start-dps.sh
 
+      - name: Wait for DPS readiness
+        run: |
+          chmod +x tests/setup/wait-for-dps.sh
+          ./tests/setup/wait-for-dps.sh
+
       - name: Run integration tests
         id: tests
         run: |

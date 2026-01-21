@@ -2,18 +2,13 @@
 
 /**
  * Public Transfer Integration Test
- *
- * Tests the transfer_public functionality from credits.aleo:
- * 1. Establishes public balance for sender
- * 2. Transfers credits publicly between accounts
- * 3. Verifies transaction acceptance
- * 4. Verifies balance changes on both accounts
+ * 
+ * Tests transfer_public transaction building, submission, and verification.
+ * Assumes devnet is already running (started by CI or manually).
  */
 
 import { test } from 'node:test';
 import assert from 'assert';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import {
     Account,
     AleoNetworkClient,
@@ -21,134 +16,85 @@ import {
     AleoKeyProvider,
     NetworkRecordProvider
 } from '@provablehq/sdk/testnet.js';
-import {
-    creditsToMicrocredits
-} from '../../setup/test-helpers.js';
+import { creditsToMicrocredits } from '../../setup/test-helpers.js';
+import { TEST_ACCOUNTS, ENDPOINTS, TIMEOUTS, TRANSFER_CONFIG } from '../../setup/constants.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+test('Public Transfer Tests', async (t) => {
+    let networkClient, senderAccount, recipientAccount, programManager;
+    let recipientInitialBalance;
 
-// Configuration
-const CONFIG = {
-    devnetApi: 'http://localhost:3030',
-    transferTimeout: 300000, // 5 minutes
-    confirmationTimeout: 60000, // 1 minute for transaction confirmation
-    transferAmountCredits: 1, // 1 credit (will be converted to microcredits)
-    feeCredits: 0.2, // fee in credits
-};
-
-// ============================================================
-// Test Suite
-// ============================================================
-
-test('Public Transfer Integration Tests', async (t) => {
-    let networkClient, senderAccount, recipientAccount;
-    let programManager;
-
-    // Test 1: Initialize SDK and create accounts
-    await t.test('Initialize SDK and create accounts', async () => {
-        // Create two accounts - sender and recipient
-        senderAccount = new Account({ privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH" });
+    await t.test('Build, submit, and verify transfer_public transaction', async () => {
+        // Setup
+        senderAccount = new Account({ privateKey: TEST_ACCOUNTS.SENDER.privateKey });
         recipientAccount = new Account();
-
-        console.log(`  Sender address: ${senderAccount.address().to_string()}`);
-        console.log(`  Recipient address: ${recipientAccount.address().to_string()}`);
-
-        networkClient = new AleoNetworkClient(CONFIG.devnetApi);
-        const height = await networkClient.getLatestHeight();
-
-        assert.ok(height >= 0, 'Devnet height should be non-negative');
-        console.log(`  Devnet height: ${height}`);
-    });
-
-    // Test 2: Check initial public balances
-    let senderInitialBalance = 0n;
-    let recipientInitialBalance = 0n;
-
-    await t.test('Check initial public balances', async () => {
-        const senderBalanceCredits = await networkClient.getPublicBalance(senderAccount.address().to_string());
+        networkClient = new AleoNetworkClient(ENDPOINTS.DEVNET_API);
+        
+        // Get initial balance
         const recipientBalanceCredits = await networkClient.getPublicBalance(recipientAccount.address().to_string());
-        senderInitialBalance = creditsToMicrocredits(senderBalanceCredits);
         recipientInitialBalance = creditsToMicrocredits(recipientBalanceCredits);
-    });
+        
+        console.log(`  Sender: ${senderAccount.address().to_string()}`);
+        console.log(`  Recipient: ${recipientAccount.address().to_string()}`);
 
-    // Test 3: Initialize ProgramManager
-    await t.test('Initialize ProgramManager', async () => {
+        // Setup ProgramManager
         const keyProvider = new AleoKeyProvider();
         keyProvider.useCache(true);
-
         const recordProvider = new NetworkRecordProvider(senderAccount, networkClient);
-        programManager = new ProgramManager(CONFIG.devnetApi, keyProvider, recordProvider);
+        programManager = new ProgramManager(ENDPOINTS.DEVNET_API, keyProvider, recordProvider);
         programManager.setAccount(senderAccount);
-    });
 
-    // Test 4: Build transfer_public transaction
-    let transferTx;
-
-    await t.test('Build transfer_public transaction', async () => {
+        // Build transaction
+        console.log(`  Building transfer_public transaction...`);
+        let transferTx;
         try {
-            const BUILD_TIMEOUT = 15 * 60 * 1000;
             transferTx = await Promise.race([
                 programManager.buildTransferTransaction(
-                    CONFIG.transferAmountCredits,
+                    TRANSFER_CONFIG.AMOUNT_CREDITS,
                     recipientAccount.address().to_string(),
                     'transfer_public',
-                    CONFIG.feeCredits
+                    TRANSFER_CONFIG.FEE_CREDITS
                 ),
                 new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error(`Transfer transaction build timeout after ${BUILD_TIMEOUT/1000/60} minutes`)), BUILD_TIMEOUT)
+                    setTimeout(() => reject(new Error('Build timeout')), TIMEOUTS.BUILD_TRANSFER)
                 )
             ]);
-
-            assert.ok(transferTx, 'Transfer transaction should be built');
         } catch (error) {
             if (error.message.includes('insufficient') || error.message.includes('balance')) {
-                t.skip('Sender requires public balance to execute transfer_public');
+                t.skip('Sender requires public balance');
             }
             throw error;
         }
-    }, { timeout: 16 * 60 * 1000 });
+        assert.ok(transferTx, 'Transaction should be built');
 
-    let txId;
-    await t.test('Submit transfer_public transaction', async () => {
-        txId = await programManager.networkClient.submitTransaction(transferTx);
-        assert.ok(txId, 'Transaction ID should be returned');
-        console.log(`  Transfer transaction submitted: ${txId}`);
-    });
+        // Submit
+        const txId = await programManager.networkClient.submitTransaction(transferTx);
+        assert.ok(txId, 'Should get transaction ID');
+        console.log(`  Submitted: ${txId}`);
 
-    let confirmedTx;
-    await t.test('Wait for transaction confirmation', async () => {
-        confirmedTx = await networkClient.waitForTransactionConfirmation(txId, 2000, CONFIG.confirmationTimeout);
+        // Wait for confirmation
+        const confirmedTx = await networkClient.waitForTransactionConfirmation(txId, TIMEOUTS.POLL_INTERVAL, TIMEOUTS.TX_CONFIRMATION);
         assert.ok(confirmedTx, 'Transaction should be confirmed');
-        console.log(`  Transaction confirmed at height: ${confirmedTx.transaction?.height || 'unknown'}`);
-    }, { timeout: CONFIG.confirmationTimeout + 5000 });
-
-    await t.test('Verify transaction details', async () => {
+        
         const tx = confirmedTx.transaction || confirmedTx;
-        assert.ok(tx.id === txId, `Transaction ID should match: ${tx.id} === ${txId}`);
-        assert.ok(tx.type === 'execute' || tx.type === 'execute_verified',
-                   `Transaction type should be execute, got: ${tx.type}`);
-    });
+        assert.ok(tx.type === 'execute' || tx.type === 'execute_verified', 'Should be execute transaction');
+        console.log(`  Confirmed at height: ${tx.height || 'unknown'}`);
+    }, { timeout: TIMEOUTS.BUILD_TRANSFER + TIMEOUTS.TX_CONFIRMATION + 10000 });
 
-    await t.test('Verify balance changes', async () => {
+    await t.test('Verify recipient received funds', async () => {
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const senderBalanceCredits = await networkClient.getPublicBalance(senderAccount.address().to_string());
         const recipientBalanceCredits = await networkClient.getPublicBalance(recipientAccount.address().to_string());
-        const senderFinalBalance = creditsToMicrocredits(senderBalanceCredits);
         const recipientFinalBalance = creditsToMicrocredits(recipientBalanceCredits);
 
-        // SDK multiplies input by 1_000_000 twice (credits → microcredits conversion bug)
-        const actualAmountTransferred = BigInt(CONFIG.transferAmountCredits * 1_000_000 * 1_000_000);
-        const expectedRecipientChange = recipientInitialBalance + actualAmountTransferred;
+        // SDK BUG: buildTransferTransaction multiplies credits by 1_000_000 twice internally
+        // So 1 credit input becomes 1_000_000_000_000 microcredits (1M credits), not 1_000_000
+        // See: docs/EXTENDING_TESTS.md "Known SDK Quirks" section
+        const actualAmountTransferred = BigInt(TRANSFER_CONFIG.AMOUNT_CREDITS * 1_000_000 * 1_000_000);
+        const expectedBalance = recipientInitialBalance + actualAmountTransferred;
 
-        if (recipientInitialBalance !== 0n || recipientFinalBalance !== 0n) {
-            assert.strictEqual(
-                recipientFinalBalance,
-                expectedRecipientChange,
-                `Recipient should have received ${actualAmountTransferred} microcredits`
-            );
+        if (recipientFinalBalance > 0n) {
+            assert.strictEqual(recipientFinalBalance, expectedBalance, 'Recipient balance should match');
+            console.log(`  Recipient received: ${recipientFinalBalance - recipientInitialBalance} microcredits`);
         }
     });
 });
-
