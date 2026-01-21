@@ -447,7 +447,8 @@ jobs:
                     break
                   fi
                   echo "Push failed, attempt $i/5 - pulling and retrying..."
-                  git pull --strategy-option theirs origin ${{ github.ref_name }}
+                  git config pull.rebase true
+                  git pull --rebase --strategy-option theirs origin ${{ github.ref_name }}
                   sleep $((i * 2))
                 done
                 
@@ -842,7 +843,8 @@ jobs:
                 break
               fi
               echo "Push failed, attempt $i/5 - pulling and retrying..."
-              git pull --strategy-option theirs origin ${{ github.ref_name }}
+              git config pull.rebase true
+              git pull --rebase --strategy-option theirs origin ${{ github.ref_name }}
               sleep $((i * 2))
             done
 
