@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-21T10:29:38Z",
+  "last_updated": "2026-01-22T03:07:28Z",
   "results": [
     {
       "snarkos_version": "bd86e5e0d1f1a93a89e5415b25d05110b2c95e3a",
@@ -173,149 +173,64 @@
       "snarkos_version": "testnet-v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:25:08Z",
+      "timestamp": "2026-01-22T03:07:11Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.27s",
+          "duration": "78.94s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "33ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.9s"
+              "duration": "78.5s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "81.9s"
+              "duration": "78.6s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "79.31s",
+          "duration": "74.67s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "42ms"
+              "duration": "71.4s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "8ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.8s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "65ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "8.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "79.0s"
+              "duration": "74.4s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "57.73s",
+          "duration": "5.54s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
-              "duration": "3.1s"
+              "duration": "3.2s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -323,14 +238,14 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "57.4s"
+              "duration": "5.2s"
             }
           ]
         }
@@ -341,149 +256,64 @@
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:28:11Z",
+      "timestamp": "2026-01-22T03:02:45Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "80.93s",
+          "duration": "79.93s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
               "duration": "33ms"
             },
             {
-              "name": "Load Aleo program",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.6s"
+              "duration": "79.6s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "80.6s"
+              "duration": "79.6s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "74.20s",
+          "duration": "73.18s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "39ms"
+              "duration": "69.9s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.8s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "62ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "73.9s"
+              "duration": "72.9s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "56.71s",
+          "duration": "5.52s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
-              "duration": "3.1s"
+              "duration": "3.2s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -491,14 +321,14 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "56.4s"
+              "duration": "5.2s"
             }
           ]
         }
@@ -509,99 +339,49 @@
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:25:27Z",
+      "timestamp": "2026-01-22T03:02:34Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "83.17s",
+          "duration": "80.72s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.8s"
+              "duration": "80.4s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "82.8s"
+              "duration": "80.4s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "76.43s",
+          "duration": "76.45s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "36ms"
+              "duration": "73.1s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "69.0s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "63ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
               "duration": "76.1s"
             }
@@ -610,46 +390,11 @@
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "57.79s",
+          "duration": "5.48s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
               "duration": "3.2s"
             },
@@ -659,14 +404,14 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "57.4s"
+              "duration": "5.2s"
             }
           ]
         }
@@ -677,149 +422,64 @@
       "snarkos_version": "testnet-v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:24:22Z",
+      "timestamp": "2026-01-22T03:02:50Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "80.59s",
+          "duration": "79.46s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "14ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "40ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.1s"
+              "duration": "79.0s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "80.2s"
+              "duration": "79.1s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "76.08s",
+          "duration": "72.62s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "39ms"
+              "duration": "69.3s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.6s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "75.8s"
+              "duration": "72.3s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "68.44s",
+          "duration": "17.20s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "25ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
+              "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -827,14 +487,14 @@
               "duration": "8.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "68.1s"
+              "duration": "16.9s"
             }
           ]
         }
@@ -845,164 +505,79 @@
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:25:19Z",
+      "timestamp": "2026-01-22T03:02:43Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "81.25s",
+          "duration": "78.90s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.8s"
+              "duration": "78.6s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "80.9s"
+              "duration": "78.6s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "73.83s",
+          "duration": "74.94s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "71.6s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.4s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "73.5s"
+              "duration": "74.6s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "66.45s",
+          "duration": "17.27s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
               "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
               "status": "passed",
-              "duration": "6.0s"
+              "duration": "8.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "66.1s"
+              "duration": "17.0s"
             }
           ]
         }
@@ -1013,149 +588,64 @@
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:25:41Z",
+      "timestamp": "2026-01-22T03:02:51Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "81.79s",
+          "duration": "80.42s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "35ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.2s"
+              "duration": "79.9s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "81.2s"
+              "duration": "80.0s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "75.06s",
+          "duration": "72.56s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "69.2s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.6s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "74.7s"
+              "duration": "72.2s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "65.42s",
+          "duration": "13.23s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
+              "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -1163,14 +653,14 @@
               "duration": "4.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "65.1s"
+              "duration": "12.9s"
             }
           ]
         }
@@ -1181,43 +671,23 @@
       "snarkos_version": "testnet-v4.4.0",
       "sdk_version": "v0.9.15",
       "result": "pass",
-      "timestamp": "2026-01-21T10:25:33Z",
+      "timestamp": "2026-01-22T03:07:04Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "80.73s",
+          "duration": "80.56s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "31ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.2s"
+              "duration": "80.3s"
             },
             {
               "name": "SDK Integration Tests",
@@ -1229,284 +699,51 @@
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "74.47s",
+          "duration": "77.78s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "36ms"
+              "duration": "74.6s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.2s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "74.3s"
+              "duration": "77.6s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "64.28s",
+          "duration": "13.14s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "64.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.0"
-    },
-    {
-      "snarkos_version": "v4.3.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:29:13Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "82.33s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "33ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.0s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "82.0s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "77.51s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "40ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.2s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "43ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "77.3s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "66.33s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
               "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
               "status": "passed",
-              "duration": "6.0s"
+              "duration": "4.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "66.1s"
+              "duration": "12.9s"
             }
           ]
         }
@@ -1514,1278 +751,52 @@
       "dps_version": "v0.18.0"
     },
     {
-      "snarkos_version": "v4.4.0",
+      "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.15",
       "result": "pass",
-      "timestamp": "2026-01-21T10:25:47Z",
+      "timestamp": "2026-01-22T03:07:10Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "81.52s",
+          "duration": "78.49s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.0s"
+              "duration": "78.1s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "81.0s"
+              "duration": "78.1s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "78.36s",
+          "duration": "74.15s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "36ms"
+              "duration": "71.0s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.0s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "8.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "78.2s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "69.31s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "8.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "69.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.0"
-    },
-    {
-      "snarkos_version": "testnet-v4.4.0",
-      "sdk_version": "v0.9.13",
-      "result": "fail",
-      "timestamp": "2026-01-21T10:25:37Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.28s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.6s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "80.7s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "72.14s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.7s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "63ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "71.8s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "failed",
-          "duration": "56.77s",
-          "error": "Exit code: 1",
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "5ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "failed",
-              "duration": "3.1s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "failed",
-              "duration": "1ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "failed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "failed",
-              "duration": "56.4s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.3.0",
-      "sdk_version": "v0.9.13",
-      "result": "fail",
-      "timestamp": "2026-01-21T10:25:28Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "82.23s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "2ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.7s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.7s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "77.06s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "40ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "6ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.6s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "63ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "76.7s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "failed",
-          "duration": "56.75s",
-          "error": "Exit code: 1",
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "failed",
-              "duration": "3.2s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "failed",
-              "duration": "1ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "failed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "failed",
-              "duration": "56.4s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.4.0",
-      "sdk_version": "v0.9.13",
-      "result": "fail",
-      "timestamp": "2026-01-21T10:29:25Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.66s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "36ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.0s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.0s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "75.78s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.3s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "63ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "75.5s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "failed",
-          "duration": "57.76s",
-          "error": "Exit code: 1",
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "failed",
-              "duration": "3.2s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "failed",
-              "duration": "1ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "failed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "failed",
-              "duration": "57.4s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "testnet-v4.4.0",
-      "sdk_version": "v0.9.14",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:11Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.20s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.6s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "80.7s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "77.84s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "8ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.4s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "77.5s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "66.43s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "66.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.3.0",
-      "sdk_version": "v0.9.14",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:09Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.45s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.0s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.0s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "73.76s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "39ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.3s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "43ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "73.5s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "64.38s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "64.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.4.0",
-      "sdk_version": "v0.9.14",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:26Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "83.36s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "40ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "83.0s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "83.0s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "75.68s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "40ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.2s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "43ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "75.4s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "69.40s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "8.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "69.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "testnet-v4.4.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:19Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "83.74s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "15ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "47ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "83.2s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "83.3s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "74.21s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.9s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "46ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
               "duration": "74.0s"
             }
@@ -2794,46 +805,94 @@
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "65.37s",
+          "duration": "11.15s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "6.9s"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Wait for transaction confirmation",
               "status": "passed",
-              "duration": "0ms"
+              "duration": "2.0s"
             },
             {
-              "name": "DPS binary availability",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
-              "duration": "0ms"
+              "duration": "2.0s"
             },
             {
-              "name": "Start snarkOS devnet",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "11ms"
+              "duration": "10.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.0"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:02:41Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "79.06s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
             },
             {
-              "name": "Start DPS",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "52.2s"
+              "duration": "78.7s"
             },
             {
-              "name": "SDK connects to local devnet",
+              "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "24ms"
+              "duration": "78.8s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "74.42s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "71.2s"
             },
             {
-              "name": "Check initial account balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "4ms"
+              "duration": "3.0s"
             },
             {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "74.2s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.13s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
               "duration": "6.9s"
             },
@@ -2843,501 +902,80 @@
               "duration": "4.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "65.2s"
+              "duration": "12.9s"
             }
           ]
         }
       ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.3.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:19Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.91s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "36ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.6s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.7s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "76.82s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "8ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.5s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "76.6s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "64.28s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "64.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
-    },
-    {
-      "snarkos_version": "v4.4.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:28:17Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "80.89s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "33ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.5s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "80.5s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "75.59s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "36ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.3s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "75.4s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "64.25s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "64.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.18.1"
+      "dps_version": "v0.18.0"
     },
     {
       "snarkos_version": "testnet-v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:25:11Z",
+      "timestamp": "2026-01-22T03:02:28Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.97s",
+          "duration": "79.30s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.4s"
+              "duration": "79.0s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "82.4s"
+              "duration": "79.0s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "75.88s",
+          "duration": "77.36s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "73.7s"
             },
             {
-              "name": "Check initial public balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "7ms"
+              "duration": "3.3s"
             },
             {
-              "name": "Initialize ProgramManager",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "66.4s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "62ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "75.5s"
+              "duration": "77.0s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "57.80s",
+          "duration": "5.50s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
               "duration": "3.2s"
             },
@@ -3347,165 +985,80 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "57.5s"
+              "duration": "5.2s"
             }
           ]
         }
       ],
-      "dps_version": "v0.19.0"
+      "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:29:05Z",
+      "timestamp": "2026-01-22T03:02:44Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.01s",
+          "duration": "79.73s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "36ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.6s"
+              "duration": "79.2s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "81.7s"
+              "duration": "79.2s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "78.61s",
+          "duration": "78.05s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "74.2s"
             },
             {
-              "name": "Check initial public balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "6ms"
+              "duration": "3.6s"
             },
             {
-              "name": "Initialize ProgramManager",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "69.2s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "62ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "78.3s"
+              "duration": "77.7s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "57.77s",
+          "duration": "5.50s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
               "duration": "3.2s"
             },
@@ -3515,165 +1068,80 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "57.5s"
+              "duration": "5.2s"
             }
           ]
         }
       ],
-      "dps_version": "v0.19.0"
+      "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.13",
       "result": "fail",
-      "timestamp": "2026-01-21T10:24:12Z",
+      "timestamp": "2026-01-22T03:02:59Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.72s",
+          "duration": "80.55s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "38ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.3s"
+              "duration": "80.0s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "82.4s"
+              "duration": "80.0s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "73.95s",
+          "duration": "76.42s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "73.1s"
             },
             {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.5s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "63ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "73.6s"
+              "duration": "76.1s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "failed",
-          "duration": "57.74s",
+          "duration": "5.49s",
           "error": "Exit code: 1",
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "failed",
               "duration": "3.2s"
             },
@@ -3683,99 +1151,497 @@
               "duration": "1ms"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "failed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "failed",
-              "duration": "57.4s"
+              "duration": "5.2s"
             }
           ]
         }
       ],
-      "dps_version": "v0.19.0"
+      "dps_version": "v0.18.1"
     },
     {
       "snarkos_version": "testnet-v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:24:19Z",
+      "timestamp": "2026-01-22T03:02:49Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "81.33s",
+          "duration": "79.76s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
               "duration": "33ms"
             },
             {
-              "name": "Load Aleo program",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
+              "duration": "79.2s"
             },
             {
-              "name": "Build deployment transaction",
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.3s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "78.71s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "75.4s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "78.4s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.24s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:01:33Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "80.65s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "33ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "80.3s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "80.3s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "77.35s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "74.0s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "77.0s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.21s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:06:19Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "81.80s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "81.2s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "81.2s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "74.65s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "71.3s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "74.3s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "19.17s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.8s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "10.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "18.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "testnet-v4.4.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:02:34Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "80.77s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "80.5s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "80.5s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "73.67s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.5s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "73.5s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.07s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:07:09Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "78.44s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "78.0s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "78.0s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "74.02s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.8s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "73.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.12s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:02:45Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "81.01s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
               "status": "passed",
               "duration": "80.7s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "80.8s"
+              "duration": "80.7s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "75.22s",
+          "duration": "74.41s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "40ms"
+              "duration": "71.2s"
             },
             {
-              "name": "Check initial public balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "6ms"
+              "duration": "3.0s"
             },
             {
-              "name": "Initialize ProgramManager",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "0ms"
-            },
+              "duration": "74.2s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.14s",
+          "error": null,
+          "subtests": [
             {
-              "name": "Build transfer_public transaction",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "67.8s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
+              "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -3783,82 +1649,346 @@
               "duration": "4.0s"
             },
             {
-              "name": "Verify transaction details",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
-              "duration": "0ms"
+              "duration": "2.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "13.0s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.18.1"
+    },
+    {
+      "snarkos_version": "testnet-v4.4.0",
+      "sdk_version": "v0.9.13",
+      "result": "fail",
+      "timestamp": "2026-01-22T03:06:25Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "79.73s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "36ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "79.3s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.4s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "73.69s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.4s"
+            },
+            {
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "74.9s"
+              "duration": "73.4s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "failed",
+          "duration": "5.47s",
+          "error": "Exit code: 1",
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "failed",
+              "duration": "3.2s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "failed",
+              "duration": "1ms"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "failed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "failed",
+              "duration": "5.2s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.13",
+      "result": "fail",
+      "timestamp": "2026-01-22T03:02:58Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "79.40s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "79.0s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.0s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "96.05s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "92.7s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "95.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "failed",
+          "duration": "5.50s",
+          "error": "Exit code: 1",
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "failed",
+              "duration": "3.2s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "failed",
+              "duration": "1ms"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "failed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "failed",
+              "duration": "5.2s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.13",
+      "result": "fail",
+      "timestamp": "2026-01-22T03:07:16Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "80.20s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "79.9s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.9s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "72.91s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "69.6s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "72.6s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "failed",
+          "duration": "5.50s",
+          "error": "Exit code: 1",
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "failed",
+              "duration": "3.2s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "failed",
+              "duration": "1ms"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "failed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "failed",
+              "duration": "5.2s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "testnet-v4.4.0",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:01:53Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "81.28s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "80.7s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "80.7s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "74.16s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.8s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "73.8s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "62.54s",
+          "duration": "15.26s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
               "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
               "status": "passed",
-              "duration": "2.0s"
+              "duration": "6.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "62.2s"
+              "duration": "15.0s"
             }
           ]
         }
@@ -3869,149 +1999,64 @@
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:28:05Z",
+      "timestamp": "2026-01-22T03:02:49Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.54s",
+          "duration": "79.88s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.1s"
+              "duration": "79.5s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "82.2s"
+              "duration": "79.5s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "77.73s",
+          "duration": "78.26s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "74.7s"
             },
             {
-              "name": "Check initial public balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "7ms"
+              "duration": "3.3s"
             },
             {
-              "name": "Initialize ProgramManager",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "68.3s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "44ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "77.4s"
+              "duration": "78.0s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "65.39s",
+          "duration": "13.24s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
+              "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -4019,14 +2064,14 @@
               "duration": "4.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "65.1s"
+              "duration": "12.9s"
             }
           ]
         }
@@ -4037,81 +2082,64 @@
       "snarkos_version": "v4.4.0",
       "sdk_version": "v0.9.14",
       "result": "pass",
-      "timestamp": "2026-01-21T10:25:43Z",
+      "timestamp": "2026-01-22T03:02:36Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "82.72s",
+          "duration": "79.97s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "1ms"
+              "duration": "32ms"
             },
             {
-              "name": "snarkOS binary availability",
+              "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "82.1s"
+              "duration": "79.6s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "82.2s"
+              "duration": "79.6s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "passed",
-          "duration": "75.58s",
+          "duration": "75.14s",
           "error": null,
           "subtests": [
             {
-              "name": "Initialize SDK and create accounts",
+              "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "37ms"
+              "duration": "71.8s"
             },
             {
-              "name": "Check initial public balances",
+              "name": "Verify recipient received funds",
               "status": "passed",
-              "duration": "7ms"
+              "duration": "3.0s"
             },
             {
-              "name": "Initialize ProgramManager",
+              "name": "Public Transfer Tests",
               "status": "passed",
-              "duration": "0ms"
-            },
+              "duration": "74.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.24s",
+          "error": null,
+          "subtests": [
             {
-              "name": "Build transfer_public transaction",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "68.1s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
+              "duration": "6.9s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -4119,17 +2147,233 @@
               "duration": "4.0s"
             },
             {
-              "name": "Verify transaction details",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
-              "duration": "0ms"
+              "duration": "2.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "testnet-v4.4.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:02:44Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "80.53s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "80.3s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "80.3s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "74.54s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "71.3s"
+            },
+            {
+              "name": "Verify recipient received funds",
               "status": "passed",
               "duration": "3.0s"
             },
             {
-              "name": "Public Transfer Integration Tests",
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "74.3s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.07s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "v4.3.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:03:05Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "81.39s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "81.1s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "81.1s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "78.09s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "74.9s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "77.9s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "17.16s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "8.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "17.0s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.19.0"
+    },
+    {
+      "snarkos_version": "v4.4.0",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-01-22T03:02:39Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "80.28s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "80.0s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "80.0s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "75.38s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "72.2s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Public Transfer Tests",
               "status": "passed",
               "duration": "75.2s"
             }
@@ -4138,384 +2382,13 @@
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "65.45s",
+          "duration": "15.18s",
           "error": null,
           "subtests": [
             {
-              "name": "Local SDK package verification",
+              "name": "Execute delegated transfer_public via DPS",
               "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "10ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "65.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.19.0"
-    },
-    {
-      "snarkos_version": "testnet-v4.4.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:31Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.04s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "34ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "80.7s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "80.7s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "72.70s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "36ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.4s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "72.5s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "64.27s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "51.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "20ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "64.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.19.0"
-    },
-    {
-      "snarkos_version": "v4.3.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:29:10Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "81.95s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "43ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.4s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.5s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "78.77s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "8ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "67.4s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "45ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "8.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "78.6s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "67.30s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "21ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
+              "duration": "7.0s"
             },
             {
               "name": "Wait for transaction confirmation",
@@ -4523,182 +2396,14 @@
               "duration": "6.0s"
             },
             {
-              "name": "Verify balance changes",
+              "name": "Verify balance changes after transfer",
               "status": "passed",
               "duration": "2.0s"
             },
             {
-              "name": "DPS Delegated Proving Integration Tests",
+              "name": "DPS Delegated Proving Tests",
               "status": "passed",
-              "duration": "67.1s"
-            }
-          ]
-        }
-      ],
-      "dps_version": "v0.19.0"
-    },
-    {
-      "snarkos_version": "v4.4.0",
-      "sdk_version": "v0.9.15",
-      "result": "pass",
-      "timestamp": "2026-01-21T10:25:51Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "82.39s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "12ms"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "35ms"
-            },
-            {
-              "name": "Load Aleo program",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build deployment transaction",
-              "status": "passed",
-              "duration": "81.8s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "81.8s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "76.80s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Initialize SDK and create accounts",
-              "status": "passed",
-              "duration": "37ms"
-            },
-            {
-              "name": "Check initial public balances",
-              "status": "passed",
-              "duration": "7ms"
-            },
-            {
-              "name": "Initialize ProgramManager",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Build transfer_public transaction",
-              "status": "passed",
-              "duration": "69.5s"
-            },
-            {
-              "name": "Submit transfer_public transaction",
-              "status": "passed",
-              "duration": "47ms"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "4.0s"
-            },
-            {
-              "name": "Verify transaction details",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Integration Tests",
-              "status": "passed",
-              "duration": "76.6s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "passed",
-          "duration": "67.27s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Local SDK package verification",
-              "status": "passed",
-              "duration": "1ms"
-            },
-            {
-              "name": "snarkOS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "DPS binary availability",
-              "status": "passed",
-              "duration": "0ms"
-            },
-            {
-              "name": "Start snarkOS devnet",
-              "status": "passed",
-              "duration": "11ms"
-            },
-            {
-              "name": "Start DPS",
-              "status": "passed",
-              "duration": "52.2s"
-            },
-            {
-              "name": "SDK connects to local devnet",
-              "status": "passed",
-              "duration": "22ms"
-            },
-            {
-              "name": "Check initial account balances",
-              "status": "passed",
-              "duration": "4ms"
-            },
-            {
-              "name": "Submit delegated proving request for transfer_public",
-              "status": "passed",
-              "duration": "6.8s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "passed",
-              "duration": "6.0s"
-            },
-            {
-              "name": "Verify balance changes",
-              "status": "passed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Integration Tests",
-              "status": "passed",
-              "duration": "67.1s"
+              "duration": "15.0s"
             }
           ]
         }
