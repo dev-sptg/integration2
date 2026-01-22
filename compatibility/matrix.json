@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-22T03:07:28Z",
+  "last_updated": "2026-01-22T11:20:27Z",
   "results": [
     {
       "snarkos_version": "bd86e5e0d1f1a93a89e5415b25d05110b2c95e3a",
@@ -255,84 +255,9 @@
     {
       "snarkos_version": "v4.3.0",
       "sdk_version": "v0.9.13",
-      "result": "fail",
-      "timestamp": "2026-01-22T03:02:45Z",
-      "tests": [
-        {
-          "name": "sdk-devnet",
-          "status": "passed",
-          "duration": "79.93s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "SDK connects to devnet and queries block height",
-              "status": "passed",
-              "duration": "33ms"
-            },
-            {
-              "name": "Build and submit deployment transaction",
-              "status": "passed",
-              "duration": "79.6s"
-            },
-            {
-              "name": "SDK Integration Tests",
-              "status": "passed",
-              "duration": "79.6s"
-            }
-          ]
-        },
-        {
-          "name": "transfer-public",
-          "status": "passed",
-          "duration": "73.18s",
-          "error": null,
-          "subtests": [
-            {
-              "name": "Build, submit, and verify transfer_public transaction",
-              "status": "passed",
-              "duration": "69.9s"
-            },
-            {
-              "name": "Verify recipient received funds",
-              "status": "passed",
-              "duration": "3.0s"
-            },
-            {
-              "name": "Public Transfer Tests",
-              "status": "passed",
-              "duration": "72.9s"
-            }
-          ]
-        },
-        {
-          "name": "dps-devnet",
-          "status": "failed",
-          "duration": "5.52s",
-          "error": "Exit code: 1",
-          "subtests": [
-            {
-              "name": "Execute delegated transfer_public via DPS",
-              "status": "failed",
-              "duration": "3.2s"
-            },
-            {
-              "name": "Wait for transaction confirmation",
-              "status": "failed",
-              "duration": "1ms"
-            },
-            {
-              "name": "Verify balance changes after transfer",
-              "status": "failed",
-              "duration": "2.0s"
-            },
-            {
-              "name": "DPS Delegated Proving Tests",
-              "status": "failed",
-              "duration": "5.2s"
-            }
-          ]
-        }
-      ],
+      "result": "error",
+      "timestamp": "2026-01-22T11:20:14Z",
+      "tests": [],
       "dps_version": "v0.18.0"
     },
     {

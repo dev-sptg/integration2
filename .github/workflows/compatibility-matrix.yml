@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: ''
+      rerun_existing:
+        description: 'Re-run tests even if results already exist'
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       test_latest_only:
@@ -49,6 +54,11 @@ on:
         required: false
         type: string
         default: ''
+      rerun_existing:
+        description: 'Re-run tests even if results already exist'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: compatibility-matrix-${{ github.ref }}
@@ -62,6 +72,11 @@ jobs:
       contents: write
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      snarkos_versions: ${{ steps.set-matrix.outputs.snarkos_versions }}
+      sdk_versions: ${{ steps.set-matrix.outputs.sdk_versions }}
+      dps_versions: ${{ steps.set-matrix.outputs.dps_versions }}
+      test_matrix: ${{ steps.set-matrix.outputs.test_matrix }}
+      run_matrix: ${{ steps.set-matrix.outputs.run_matrix }}
       report_id: ${{ steps.set-matrix.outputs.report_id }}
       metadata_json: ${{ steps.set-matrix.outputs.metadata_json }}
       standalone_mode: ${{ steps.set-matrix.outputs.standalone_mode }}
@@ -82,14 +97,120 @@ jobs:
             echo "$1" | grep -qE '^[a-fA-F0-9]{7,40}$'
           }
 
+          build_include_matrix() {
+            local matrix_json="$1"
+            echo "$matrix_json" | jq -c '
+              to_entries as $entries
+              | reduce $entries[] as $e ([{}];
+                  [ .[] as $obj | $e.value[] as $v | $obj + {($e.key): $v} ]
+                )
+            '
+          }
+
+          emit_matrix_outputs() {
+            local matrix_json="$1"
+            local matrix_compact
+            local all_combos
+            local missing_combos
+            local run_matrix="true"
+            local version_keys
+            local existing_combos="[]"
+            local total_count
+            local existing_count
+            local missing_count
+            local snarkos_versions
+            local sdk_versions
+            local dps_versions
+            local test_matrix
+
+            matrix_compact=$(echo "$matrix_json" | jq -c .)
+            all_combos=$(build_include_matrix "$matrix_json")
+            missing_combos="$all_combos"
+            version_keys=$(echo "$matrix_json" | jq -c 'keys')
+
+            if [ "$DEDUP_MODE" == "true" ]; then
+              if [ -f "$MATRIX_FILE" ]; then
+                if ! existing_combos=$(jq -c --argjson keys "$version_keys" '
+                  (.results // [])
+                  | if type == "array" then . else [] end
+                  | map(select(type == "object"))
+                  | map(select(. as $obj | $keys | all(. as $k | $obj[$k] != null and $obj[$k] != "" and $obj[$k] != "null")))
+                  | map(with_entries(select(.key as $k | $keys | index($k))))
+                  | unique
+                ' "$MATRIX_FILE"); then
+                  echo "Warning: failed to parse matrix.json results, skipping dedup."
+                  existing_combos="[]"
+                fi
+              fi
+
+              missing_combos=$(echo "$all_combos" | jq -c --argjson existing "$existing_combos" '[ .[] | select($existing | index(.) | not) ]')
+              total_count=$(echo "$all_combos" | jq 'length')
+              existing_count=$(echo "$existing_combos" | jq 'length')
+              missing_count=$(echo "$missing_combos" | jq 'length')
+              echo "Schedule filtering: total=$total_count existing=$existing_count missing=$missing_count"
+              if [ "$missing_count" -eq 0 ]; then
+                run_matrix="false"
+              fi
+            fi
+
+            if [ "$PR_RUN_TESTS" == "false" ]; then
+              run_matrix="false"
+            fi
+
+            snarkos_versions=$(echo "$missing_combos" | jq -c '[.[].snarkos_version] | map(select(. != null and . != "" and . != "null")) | unique')
+            sdk_versions=$(echo "$missing_combos" | jq -c '[.[].sdk_version] | map(select(. != null and . != "" and . != "null")) | unique')
+            dps_versions=$(echo "$missing_combos" | jq -c '[.[].dps_version] | map(select(. != null and . != "" and . != "null")) | unique')
+            test_matrix=$(echo "$missing_combos" | jq -c '{include: .}')
+
+            echo "matrix=$matrix_compact" >> $GITHUB_OUTPUT
+            echo "snarkos_versions=$snarkos_versions" >> $GITHUB_OUTPUT
+            echo "sdk_versions=$sdk_versions" >> $GITHUB_OUTPUT
+            echo "dps_versions=$dps_versions" >> $GITHUB_OUTPUT
+            echo "test_matrix=$test_matrix" >> $GITHUB_OUTPUT
+            echo "run_matrix=$run_matrix" >> $GITHUB_OUTPUT
+          }
+
           # Read versions config for repo URLs
-            VERSIONS_FILE="compatibility/versions.json"
+          VERSIONS_FILE="compatibility/versions.json"
           MATRIX_FILE="compatibility/matrix.json"
 
           # Get unified inputs
           SNARKOS_INPUT="${{ inputs.snarkos }}"
           SDK_INPUT="${{ inputs.sdk }}"
           DPS_INPUT="${{ inputs.dps }}"
+
+          # Determine if PR changes require running tests
+          PR_RUN_TESTS="true"
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            PR_RUN_TESTS="false"
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+              if ! git fetch --no-tags --depth=1 origin "$BASE_SHA" "$HEAD_SHA"; then
+                echo "Warning: failed to fetch PR SHAs, running tests to be safe."
+                PR_RUN_TESTS="true"
+              else
+                CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)
+                if echo "$CHANGED_FILES" | grep -Eq '^(compatibility/matrix\.json|tests/)'; then
+                  PR_RUN_TESTS="true"
+                fi
+              fi
+            else
+              PR_RUN_TESTS="true"
+            fi
+            echo "PR run tests: $PR_RUN_TESTS"
+          fi
+
+          # Determine when to deduplicate existing results
+          DEDUP_MODE="false"
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            DEDUP_MODE="true"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] || [ "${{ github.event_name }}" == "workflow_call" ]; then
+            if [ "${{ inputs.rerun_existing }}" != "true" ]; then
+              DEDUP_MODE="true"
+            fi
+          fi
+          echo "Dedup mode: $DEDUP_MODE (event=${{ github.event_name }})"
 
           # Auto-detect mode: if ANY input looks like a commit SHA, use standalone mode
           STANDALONE_MODE="false"
@@ -305,7 +426,7 @@ jobs:
             echo "Generated matrix for standalone mode:"
             echo "$MATRIX_OBJ" | jq .
 
-            echo "matrix=$(echo "$MATRIX_OBJ" | jq -c .)" >> $GITHUB_OUTPUT
+            emit_matrix_outputs "$MATRIX_OBJ"
             echo "standalone_mode=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -347,6 +468,7 @@ jobs:
 
           # Read versions from config file
           VERSIONS_FILE="compatibility/versions.json"
+          MATRIX_FILE="compatibility/matrix.json"
           
           # Determine if we should fetch latest versions (Schedule or Manual flag)
           SHOULD_FETCH="false"
@@ -465,22 +587,20 @@ jobs:
           fi
           
           # Output matrix
-          # Ensure matrix is compact JSON (single line) for GITHUB_OUTPUT
-          MATRIX_COMPACT=$(echo "$MATRIX_OBJ" | jq -c .)
-          
           echo "Generated matrix:"
           echo "$MATRIX_OBJ" | jq .
-          
-          echo "matrix=$MATRIX_COMPACT" >> $GITHUB_OUTPUT
+
+          emit_matrix_outputs "$MATRIX_OBJ"
           echo "standalone_mode=false" >> $GITHUB_OUTPUT
 
   # Build all snarkOS versions in parallel
   build-snarkos:
     needs: generate-matrix
+    if: needs.generate-matrix.outputs.run_matrix == 'true'
     strategy:
       fail-fast: false
       matrix:
-        snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).snarkos_version }}
+        snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.snarkos_versions) }}
     uses: ./.github/workflows/setup-snarkos.yml
     with:
       ref: ${{ matrix.snarkos_version }}
@@ -489,10 +609,11 @@ jobs:
   # Build all SDK versions in parallel
   build-sdk:
     needs: generate-matrix
+    if: needs.generate-matrix.outputs.run_matrix == 'true'
     strategy:
       fail-fast: false
       matrix:
-        sdk_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).sdk_version }}
+        sdk_version: ${{ fromJson(needs.generate-matrix.outputs.sdk_versions) }}
     uses: ./.github/workflows/setup-sdk.yml
     with:
       ref: ${{ matrix.sdk_version }}
@@ -501,10 +622,11 @@ jobs:
   # Build all DPS versions in parallel
   build-dps:
     needs: generate-matrix
+    if: needs.generate-matrix.outputs.run_matrix == 'true'
     strategy:
       fail-fast: false
       matrix:
-        dps_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).dps_version }}
+        dps_version: ${{ fromJson(needs.generate-matrix.outputs.dps_versions) }}
     uses: ./.github/workflows/setup-dps.yml
     secrets:
       REPO_ACCESS_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
@@ -515,14 +637,12 @@ jobs:
   # Test all combinations
   test-compatibility:
     needs: [generate-matrix, build-snarkos, build-sdk, build-dps]
+    if: needs.generate-matrix.outputs.run_matrix == 'true'
     runs-on: ubuntu-latest-l
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        snarkos_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).snarkos_version }}
-        sdk_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).sdk_version }}
-        dps_version: ${{ fromJson(needs.generate-matrix.outputs.matrix).dps_version }}
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.test_matrix) }}
     steps:
       - name: Checkout integration test repository
         uses: actions/checkout@v5
@@ -756,7 +876,7 @@ jobs:
   # Aggregate results and update matrix.json
   aggregate-results:
     needs: [generate-matrix, test-compatibility]
-    if: always()
+    if: always() && (needs.generate-matrix.outputs.run_matrix == 'true' || needs.generate-matrix.outputs.standalone_mode == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
