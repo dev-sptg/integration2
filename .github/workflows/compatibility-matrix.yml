@@ -210,7 +210,6 @@ jobs:
               DEDUP_MODE="true"
             fi
           fi
-          echo "Dedup mode: $DEDUP_MODE (event=${{ github.event_name }})"
 
           # Auto-detect mode: if ANY input looks like a commit SHA, use standalone mode
           STANDALONE_MODE="false"
@@ -221,6 +220,12 @@ jobs:
           elif [ -n "$DPS_INPUT" ] && is_commit_sha "$DPS_INPUT"; then
             STANDALONE_MODE="true"
           fi
+
+          # Standalone commit SHA tests should always run (no deduping)
+          if [ "$STANDALONE_MODE" == "true" ]; then
+            DEDUP_MODE="false"
+          fi
+          echo "Dedup mode: $DEDUP_MODE (event=${{ github.event_name }}, standalone=$STANDALONE_MODE)"
 
           # Check for standalone mode (on-demand testing with commit SHAs)
           if [ "$STANDALONE_MODE" == "true" ]; then

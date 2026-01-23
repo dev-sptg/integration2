@@ -47,7 +47,7 @@ Integration test framework for ProvableHQ's components. Tests snarkOS, SDK, and 
 Test specific versions via GitHub Actions:
 
 ```bash
-# Test with commit SHAs (DPS defaults to latest passing version)
+# Test with commit SHAs (DPS defaults to latest passing result; fallback to versions.json)
 gh workflow run compatibility-matrix.yml \
   -f snarkos=a1b2c3d4e5f6 \
   -f sdk=f6e5d4c3b2a1
@@ -68,7 +68,7 @@ gh workflow run compatibility-matrix.yml \
 ### Using curl / GitHub API
 
 ```bash
-# Basic trigger with two components (DPS defaults from matrix)
+# Basic trigger with two components (DPS defaults from latest passing matrix or versions.json)
 curl -X POST \
   -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
