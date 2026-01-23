@@ -47,16 +47,50 @@ Integration test framework for ProvableHQ's components. Tests snarkOS, SDK, and 
 Test specific versions via GitHub Actions:
 
 ```bash
-# Test with commit SHAs
+# Test with commit SHAs (DPS defaults to latest passing version)
 gh workflow run compatibility-matrix.yml \
   -f snarkos=a1b2c3d4e5f6 \
   -f sdk=f6e5d4c3b2a1
 
-# Test with tags
+# Test with tags (all three components)
 gh workflow run compatibility-matrix.yml \
   -f snarkos=v4.4.0 \
-  -f sdk=v0.9.14
+  -f sdk=v0.9.14 \
+  -f dps=v0.19.0
+
+# Force re-run even if results already exist
+gh workflow run compatibility-matrix.yml \
+  -f snarkos=v4.4.0 \
+  -f sdk=v0.9.14 \
+  -f rerun_existing=true
 ```
+
+### Using curl / GitHub API
+
+```bash
+# Basic trigger with two components (DPS defaults from matrix)
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/OWNER/REPO/actions/workflows/compatibility-matrix.yml/dispatches \
+  -d '{"ref":"main","inputs":{"snarkos":"v4.4.0","sdk":"v0.9.14"}}'
+
+# Force re-run existing tests
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/OWNER/REPO/actions/workflows/compatibility-matrix.yml/dispatches \
+  -d '{"ref":"main","inputs":{"snarkos":"v4.4.0","sdk":"v0.9.14","rerun_existing":"true"}}'
+
+# All three components with force re-run
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/OWNER/REPO/actions/workflows/compatibility-matrix.yml/dispatches \
+  -d '{"ref":"main","inputs":{"snarkos":"v4.4.0","sdk":"v0.9.14","dps":"v0.19.0","rerun_existing":"true"}}'
+```
+
+**Note**: For `workflow_dispatch` via API, boolean inputs must be passed as strings (`"true"` or `"false"`).
 
 Or use the [Actions UI](../../actions/workflows/compatibility-matrix.yml) → Run workflow.
 

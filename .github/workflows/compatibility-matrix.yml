@@ -316,95 +316,80 @@ jobs:
               exit 1
             fi
 
-            # If only one component provided, fetch defaults from matrix.json
-            if [ $COMPONENT_COUNT -eq 1 ]; then
-              echo "📋 Only one component specified, fetching defaults from matrix.json..."
+            # Fill in defaults for any missing components from matrix.json or versions.json
+            # This ensures tests can run with partial inputs (e.g., only SDK + snarkOS provided)
+            MISSING_COMPONENTS=()
+            [ -z "$SNARKOS_REF" ] && MISSING_COMPONENTS+=("snarkos")
+            [ -z "$SDK_REF" ] && MISSING_COMPONENTS+=("sdk")
+            [ -z "$DPS_REF" ] && MISSING_COMPONENTS+=("dps")
+
+            if [ ${#MISSING_COMPONENTS[@]} -gt 0 ]; then
+              echo "📋 Missing components: ${MISSING_COMPONENTS[*]}, fetching defaults..."
               
+              LATEST_PASS="null"
               if [ -f "$MATRIX_FILE" ]; then
                 # Find the most recent passing result
                 LATEST_PASS=$(jq -r '.results | map(select(.result == "pass")) | sort_by(.timestamp) | reverse | .[0]' "$MATRIX_FILE" 2>/dev/null || echo "null")
+              fi
+              
+              if [ "$LATEST_PASS" != "null" ] && [ -n "$LATEST_PASS" ]; then
+                echo "📖 Using defaults from latest passing matrix result"
+                # Extract missing component versions from matrix.json
+                if [ -z "$SNARKOS_REF" ]; then
+                  SNARKOS_REF=$(echo "$LATEST_PASS" | jq -r '.snarkos_version // empty')
+                  if [ -n "$SNARKOS_REF" ]; then
+                    COMPONENTS+=("snarkos")
+                    echo "📌 Using snarkOS from matrix.json: $SNARKOS_REF"
+                  fi
+                fi
                 
-                if [ "$LATEST_PASS" != "null" ] && [ -n "$LATEST_PASS" ]; then
-                  # Extract missing component versions
-                  if [ -z "$SNARKOS_REF" ]; then
-                    SNARKOS_REF=$(echo "$LATEST_PASS" | jq -r '.snarkos_version // empty')
-                    if [ -n "$SNARKOS_REF" ]; then
-                      COMPONENTS+=("snarkos")
-                      echo "📌 Using snarkOS from matrix.json: $SNARKOS_REF"
-                    fi
+                if [ -z "$SDK_REF" ]; then
+                  SDK_REF=$(echo "$LATEST_PASS" | jq -r '.sdk_version // empty')
+                  if [ -n "$SDK_REF" ]; then
+                    COMPONENTS+=("sdk")
+                    echo "📌 Using SDK from matrix.json: $SDK_REF"
                   fi
-                  
-                  if [ -z "$SDK_REF" ]; then
-                    SDK_REF=$(echo "$LATEST_PASS" | jq -r '.sdk_version // empty')
-                    if [ -n "$SDK_REF" ]; then
-                      COMPONENTS+=("sdk")
-                      echo "📌 Using SDK from matrix.json: $SDK_REF"
-                    fi
-                  fi
-                  
-                  if [ -z "$DPS_REF" ]; then
-                    DPS_REF=$(echo "$LATEST_PASS" | jq -r '.dps_version // empty')
-                    if [ -n "$DPS_REF" ]; then
-                      COMPONENTS+=("dps")
-                      echo "📌 Using DPS from matrix.json: $DPS_REF"
-                    fi
-                  fi
-                else
-                  echo "⚠️ No passing results found in matrix.json, falling back to versions.json"
-                  # Fallback to latest from versions.json
-                  if [ -z "$SNARKOS_REF" ]; then
-                    SNARKOS_REF=$(jq -r '.components.snarkos.tags[0] // empty' "$VERSIONS_FILE")
-                    if [ -n "$SNARKOS_REF" ]; then
-                      COMPONENTS+=("snarkos")
-                      echo "📌 Using latest snarkOS from versions.json: $SNARKOS_REF"
-                    fi
-                  fi
-                  if [ -z "$SDK_REF" ]; then
-                    SDK_REF=$(jq -r '.components.sdk.tags[0] // empty' "$VERSIONS_FILE")
-                    if [ -n "$SDK_REF" ]; then
-                      COMPONENTS+=("sdk")
-                      echo "📌 Using latest SDK from versions.json: $SDK_REF"
-                    fi
-                  fi
-                  if [ -z "$DPS_REF" ]; then
-                    DPS_REF=$(jq -r '.components.dps.tags[0] // empty' "$VERSIONS_FILE")
-                    if [ -n "$DPS_REF" ]; then
-                      COMPONENTS+=("dps")
-                      echo "📌 Using latest DPS from versions.json: $DPS_REF"
-                    fi
+                fi
+                
+                if [ -z "$DPS_REF" ]; then
+                  DPS_REF=$(echo "$LATEST_PASS" | jq -r '.dps_version // empty')
+                  if [ -n "$DPS_REF" ]; then
+                    COMPONENTS+=("dps")
+                    echo "📌 Using DPS from matrix.json: $DPS_REF"
                   fi
                 fi
               else
-                echo "⚠️ matrix.json not found, falling back to versions.json"
-                # Fallback to latest from versions.json
-                if [ -z "$SNARKOS_REF" ]; then
-                  SNARKOS_REF=$(jq -r '.components.snarkos.tags[0] // empty' "$VERSIONS_FILE")
-                  if [ -n "$SNARKOS_REF" ]; then
-                    COMPONENTS+=("snarkos")
-                    echo "📌 Using latest snarkOS from versions.json: $SNARKOS_REF"
-                  fi
+                echo "⚠️ No passing results in matrix.json, falling back to versions.json"
+              fi
+              
+              # Fallback to versions.json for any still-missing components
+              if [ -z "$SNARKOS_REF" ]; then
+                SNARKOS_REF=$(jq -r '.components.snarkos.tags[0] // empty' "$VERSIONS_FILE")
+                if [ -n "$SNARKOS_REF" ]; then
+                  COMPONENTS+=("snarkos")
+                  echo "📌 Using latest snarkOS from versions.json: $SNARKOS_REF"
                 fi
-                if [ -z "$SDK_REF" ]; then
-                  SDK_REF=$(jq -r '.components.sdk.tags[0] // empty' "$VERSIONS_FILE")
-                  if [ -n "$SDK_REF" ]; then
-                    COMPONENTS+=("sdk")
-                    echo "📌 Using latest SDK from versions.json: $SDK_REF"
-                  fi
+              fi
+              if [ -z "$SDK_REF" ]; then
+                SDK_REF=$(jq -r '.components.sdk.tags[0] // empty' "$VERSIONS_FILE")
+                if [ -n "$SDK_REF" ]; then
+                  COMPONENTS+=("sdk")
+                  echo "📌 Using latest SDK from versions.json: $SDK_REF"
                 fi
-                if [ -z "$DPS_REF" ]; then
-                  DPS_REF=$(jq -r '.components.dps.tags[0] // empty' "$VERSIONS_FILE")
-                  if [ -n "$DPS_REF" ]; then
-                    COMPONENTS+=("dps")
-                    echo "📌 Using latest DPS from versions.json: $DPS_REF"
-                  fi
+              fi
+              if [ -z "$DPS_REF" ]; then
+                DPS_REF=$(jq -r '.components.dps.tags[0] // empty' "$VERSIONS_FILE")
+                if [ -n "$DPS_REF" ]; then
+                  COMPONENTS+=("dps")
+                  echo "📌 Using latest DPS from versions.json: $DPS_REF"
                 fi
               fi
             fi
 
-            # Validate at least 2 components after fallback
+            # Validate at least 2 components after filling defaults
             COMPONENT_COUNT=${#COMPONENTS[@]}
             if [ $COMPONENT_COUNT -lt 2 ]; then
-              echo "❌ Error: At least two components must be specified (after fallback: $COMPONENT_COUNT)"
+              echo "❌ Error: At least two components must be specified (after defaults: $COMPONENT_COUNT)"
               exit 1
             fi
 
