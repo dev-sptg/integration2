@@ -4,9 +4,9 @@
       "label": "snarkOS",
       "repo": "provableHQ/snarkOS",
       "tags": [
-        "v4.4.0",
-        "testnet-v4.4.0",
-        "v4.3.0"
+        "testnet-v4.5.1",
+        "testnet-v4.5.0",
+        "v4.4.0"
       ],
       "branches": []
     },
