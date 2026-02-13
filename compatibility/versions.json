@@ -14,9 +14,9 @@
       "label": "SDK",
       "repo": "ProvableHQ/sdk",
       "tags": [
+        "v0.9.16",
         "v0.9.15",
-        "v0.9.14",
-        "v0.9.13"
+        "v0.9.14"
       ],
       "branches": []
     },
