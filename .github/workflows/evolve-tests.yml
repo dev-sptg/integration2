@@ -2,7 +2,7 @@ name: Evolve E2E Tests
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Every day at 03:00 UTC
+    - cron: '0 */4 * * *'  # Every 4 hours (UTC)
   workflow_dispatch:
     inputs:
       focus_area:
@@ -11,7 +11,7 @@ on:
         type: string
         default: ''
       model:
-        description: 'Model override (e.g., "anthropic/claude-sonnet-4-20250514")'
+        description: 'Model override (e.g., "zai/glm-4.7" or "glm-4.7")'
         required: false
         type: string
         default: ''
@@ -39,6 +39,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "Recent evolution PRs (last 10):"
+          gh pr list \
+            --label "e2e-evolution" \
+            --state all \
+            --limit 10 \
+            --json number,title,state,createdAt,mergedAt,url \
+            --jq '.[] | "  #\(.number) [\(.state)] \(.title) (\(.createdAt)) \(.url)"' || true
+
           OPEN_PRS=$(gh pr list --label "e2e-evolution" --state open --json number --jq 'length')
           if [ "$OPEN_PRS" -gt "0" ]; then
             echo "has_open_pr=true" >> $GITHUB_OUTPUT
@@ -100,29 +108,34 @@ jobs:
       - name: Generate crush config
         if: steps.check-pr.outputs.has_open_pr != 'true'
         run: |
-          cat > .crush.json << 'CRUSHEOF'
-          {
+          python3 - <<'PY'
+          import json, os
+
+          token = os.environ.get("ZAI_TOKEN")
+          if not token:
+            raise SystemExit("ZAI_TOKEN is required (set as a GitHub secret or variable).")
+
+          cfg = {
             "providers": {
               "zai": {
                 "id": "zai",
                 "name": "ZAI Provider",
                 "base_url": "https://api.z.ai/api/coding/paas/v4",
-                "api_key": "PLACEHOLDER"
+                "api_key": token,
               }
             },
             "options": {
               "context_paths": ["agents.md"]
             }
           }
-          CRUSHEOF
 
-          # Inject actual token (avoid shell expansion issues with heredoc)
-          sed -i "s/PLACEHOLDER/$ZAI_TOKEN/" .crush.json
-
-          echo "Crush config written:"
-          cat .crush.json
+          with open(".crush.json", "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+            f.write("\n")
+          print("Crush config written.")
+          PY
         env:
-          ZAI_TOKEN: ${{ vars.ZAI_MODEL }}
+          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN || vars.ZAI_TOKEN }}
 
       - name: Build evolution prompt
         if: steps.check-pr.outputs.has_open_pr != 'true'
@@ -163,17 +176,31 @@ jobs:
           Context - recent test results:
           ${TEST_RESULTS}
 
-          Rules:
-          1. Read all test files first (tests/integration/*/test.js, tests/setup/constants.js, tests/run-all-tests.js)
-          2. Read docs/EXTENDING_TESTS.md for conventions
+          What good looks like:
+          - Add coverage for a cross-component flow (snarkOS devnet + SDK + DPS) or a realistic failure mode (timeouts, retries, service hiccups, chain reorg-ish behavior, bad inputs).
+          - Avoid shallow SDK-only tests (e.g. constructors, simple getters). Tests should validate end-to-end behavior and observable outcomes (accepted tx, confirmation, balances, error surfaces).
+
+          Hard constraints (keep the suite manageable):
+          - Prefer strengthening an existing suite over creating a new suite.
+          - Do NOT add multiple near-duplicate test cases. If you need variants, use a small table-driven loop inside one test to reduce copy/paste.
+          - Minimal diff budget: aim for <= 120 added lines total, and <= 2 new t.test(...) cases.
+          - If you must add a new suite, add only ONE new suite directory and also update tests/run-all-tests.js (testSuites + suiteTimeouts).
+
+          Workflow:
+          1. Read all test files first:
+             - tests/integration/*/test.js
+             - tests/setup/constants.js
+             - tests/setup/test-helpers.js
+             - tests/run-all-tests.js
+          2. Read docs/EXTENDING_TESTS.md for conventions (especially known SDK quirks to avoid writing redundant tests).
           3. Pick ONE improvement category:
-             a) New test suite for untested scenarios (error handling, edge cases, concurrent ops)
-             b) Strengthen existing test assertions
-             c) Add regression tests based on failure patterns
-          4. If creating a new suite, also update tests/run-all-tests.js (testSuites + suiteTimeouts)
-          5. Follow existing patterns exactly (node:test, ESM, same imports, same constants)
-          6. After making changes, run 'node --check' on every .js file you modified to verify syntax
-          7. Be conservative - one well-crafted change, not many small ones"
+             a) Add one high-value complex-flow test (preferred)
+             b) Strengthen assertions in an existing complex flow
+             c) Add a regression guard based on recent failures (matrix.json) or upstream changes
+          4. Follow existing patterns exactly (node:test, ESM, same imports, same constants, same endpoints/timeouts).
+          5. Keep tests resilient: wait for confirmations using existing helpers/patterns; avoid sleeps unless the repo already uses them.
+          6. After making changes, run 'node --check' on every .js file you modified to verify syntax.
+          7. Be conservative - one well-crafted improvement, not many small ones."
 
           if [ -n "$FOCUS" ]; then
             PROMPT="${PROMPT}
@@ -193,7 +220,14 @@ jobs:
         if: steps.check-pr.outputs.has_open_pr != 'true'
         id: evolve
         run: |
-          MODEL_FLAG="-m zai/glm-4.7"
+          MODEL="${EVOLUTION_MODEL:-}"
+          if [ -z "$MODEL" ]; then
+            MODEL="zai/glm-4.7"
+          fi
+          if [[ "$MODEL" != */* ]]; then
+            MODEL="zai/$MODEL"
+          fi
+          MODEL_FLAG="-m $MODEL"
 
           echo "Running crush with model: $MODEL_FLAG"
           echo "Working directory: $(pwd)"
@@ -215,18 +249,77 @@ jobs:
             # Extract a summary from changed files
             SUMMARY="AI-evolved e2e tests ($(echo "$CHANGED_FILES" | wc -l) files changed)"
             echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+            echo "model=$MODEL" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No test files were changed."
           fi
         env:
-          ZAI_TOKEN: ${{ vars.ZAI_MODEL }}
+          EVOLUTION_MODEL: ${{ inputs.model != '' && inputs.model || vars.ZAI_MODEL }}
+          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN || vars.ZAI_TOKEN }}
 
       - name: Validate changes
         if: steps.check-pr.outputs.has_open_pr != 'true' && steps.evolve.outputs.has_changes == 'true'
         id: validate
         run: |
           ERRORS=0
+
+          # Enforce guardrails to keep test evolution manageable
+          python3 - <<'PY' || {
+            echo "valid=false" >> $GITHUB_OUTPUT
+            echo "Guardrails failed. Reverting."
+            git checkout -- tests/
+            exit 0
+          }
+          import subprocess
+
+          def sh(cmd: str) -> str:
+            return subprocess.check_output(cmd, shell=True, text=True).strip()
+
+          changed_files = sh("git diff --name-only -- tests/").splitlines()
+          changed_files = [f for f in changed_files if f.strip()]
+          num_changed = len(changed_files)
+
+          numstat = sh("git diff --numstat -- tests/").splitlines()
+          added = 0
+          for line in numstat:
+            parts = line.split("\t")
+            if len(parts) < 3:
+              continue
+            a = parts[0]
+            if a.isdigit():
+              added += int(a)
+
+          name_status = sh("git diff --name-status -- tests/integration/").splitlines()
+          new_suite_pkgs = 0
+          for line in name_status:
+            parts = line.split("\t", 1)
+            if len(parts) != 2:
+              continue
+            status, path = parts
+            if status == "A" and path.endswith("/package.json"):
+              new_suite_pkgs += 1
+
+          # Budget: keep diffs small, avoid suite explosion
+          max_changed_files = 4
+          max_added_lines = 250
+          max_new_suites = 1
+
+          violations = []
+          if num_changed > max_changed_files:
+            violations.append(f"changed files {num_changed} > {max_changed_files}")
+          if added > max_added_lines:
+            violations.append(f"added lines {added} > {max_added_lines}")
+          if new_suite_pkgs > max_new_suites:
+            violations.append(f"new suites {new_suite_pkgs} > {max_new_suites}")
+
+          if violations:
+            print("Guardrail violation(s): " + ", ".join(violations))
+            raise SystemExit(2)
+
+          print(f"Guardrails OK: changed_files={num_changed}, added_lines={added}, new_suites={new_suite_pkgs}")
+          PY
+
           for file in $(git diff --name-only -- tests/ | grep '\.js$'); do
             if ! node --check "$file" 2>/dev/null; then
               echo "Syntax error in: $file"
@@ -299,7 +392,7 @@ jobs:
           ### Metadata
           - Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
           - Agent: crush (opencode)
-          - Model: glm-4.7 (z.ai)
+          - Model: ${{ steps.evolve.outputs.model }}
 
           ---
           *This PR was automatically generated by the e2e test evolution workflow using [crush](https://github.com/charmbracelet/crush). Please review carefully before merging.*"
