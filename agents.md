@@ -21,6 +21,7 @@ Integration test framework for ProvableHQ's components. Aims to be an e2e test f
 │   ├── integration-tests.yml         # Main integration test workflow
 │   ├── compatibility-matrix.yml      # Multi-version compatibility testing
 │   ├── matrix-on-release.yml         # Trigger tests on releases
+│   ├── evolve-tests.yml              # AI-powered e2e test evolution (nightly cron, crush agent)
 │   ├── setup-snarkos.yml             # snarkOS build workflow
 │   ├── setup-sdk.yml                 # SDK build workflow
 │   ├── setup-dps.yml                 # DPS build workflow
@@ -49,6 +50,9 @@ Integration test framework for ProvableHQ's components. Aims to be an e2e test f
 │   ├── programs/                     # Test Aleo programs
 │   ├── run-all-tests.sh              # Master test runner (shell)
 │   └── run-all-tests.js              # Test orchestrator (Node.js)
+├── scripts/
+│   ├── generate-standalone-dashboard.sh
+│   └── validate-commit-sha.sh
 ├── README.md                         # Human documentation
 └── agents.md                         # This file
 ```
@@ -98,7 +102,49 @@ Integration test framework for ProvableHQ's components. Aims to be an e2e test f
 }
 ```
 
-### 3. Matrix on Release (`matrix-on-release.yml`)
+### 3. Evolve E2E Tests (`evolve-tests.yml`)
+
+**Triggers**: Nightly cron (03:00 UTC), manual
+
+**Purpose**: Use an AI coding agent (crush/opencode) with z.ai to analyze the test suite and propose improvements
+
+**How it works**:
+1. Checks for existing open evolution PRs (skips if one exists)
+2. Closes stale evolution PRs (>14 days old)
+3. Installs [crush](https://github.com/charmbracelet/crush) (the opencode successor)
+4. Generates a `.crush.json` config with z.ai as the provider
+5. Gathers upstream repo changes and test results as context for the prompt
+6. Runs `crush run -y` in non-interactive mode with the evolution prompt
+   - Crush has full agent capabilities: reads files, edits code, runs commands
+   - The prompt instructs it to read all tests, pick ONE improvement, implement it
+7. Validates all changed JS/JSON files (syntax check)
+8. Creates a PR with the `e2e-evolution` label for human review
+
+**Required Secrets**:
+- `ZAI_TOKEN`: z.ai API authentication token
+
+**Optional Configuration** (repository variables):
+- `ZAI_MODEL`: Model ID (default: `claude-sonnet-4-20250514`)
+
+**Safety measures**:
+- Crush prompt restricts changes to `tests/` directory only
+- Post-run syntax validation (node --check, JSON parse)
+- Reverts all changes on validation failure
+- One open evolution PR at a time (prevents noise)
+- Stale PRs auto-closed after 14 days
+- All changes require human review via PR
+
+**Manual trigger with focus area**:
+```bash
+gh workflow run evolve-tests.yml \
+  --field focus_area="error handling and edge cases"
+
+# Override model
+gh workflow run evolve-tests.yml \
+  --field model="anthropic/claude-opus-4-20250514"
+```
+
+### 4. Matrix on Release (`matrix-on-release.yml`)
 
 **Triggers**: repository_dispatch (snarkos-release, sdk-release), manual
 
@@ -260,9 +306,18 @@ Integration test framework for ProvableHQ's components. Aims to be an e2e test f
   - ✅ Delegated proving validation
   - ✅ Compatibility matrix with 3 components
 
-**Milestone 3**: 📋 Planned - Compatibility dashboard enhancements
+**Milestone 3**: ✅ Complete - Compatibility dashboard enhancements
   - ✅ Cloudflare Pages deployment
   - ✅ Nightly version updates
+
+**Milestone 3.5**: ✅ Complete - AI-powered test evolution
+  - ✅ Nightly cron workflow (`evolve-tests.yml`)
+  - ✅ crush (opencode) agent with z.ai provider
+  - ✅ Upstream change awareness (snarkOS, SDK recent commits)
+  - ✅ Past test results analysis (from `matrix.json`)
+  - ✅ Auto-PR creation with `e2e-evolution` label
+  - ✅ Stale PR auto-cleanup (>14 days)
+  - ✅ JS syntax + JSON validation before PR
 
 **Milestone 4**: 📋 Planned - Record scanning service integration
 

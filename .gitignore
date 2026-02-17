@@ -45,3 +45,7 @@ compatibility/dashboard-dist/
 
 *.current-proposal-*
 *.node-data-*
+
+# Crush / evolution workflow
+.crush/
+.crush.json

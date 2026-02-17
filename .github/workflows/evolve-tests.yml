@@ -1,0 +1,315 @@
+name: Evolve E2E Tests
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Every day at 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      focus_area:
+        description: 'Focus area for test evolution (e.g., "error handling", "edge cases", "new SDK APIs")'
+        required: false
+        type: string
+        default: ''
+      model:
+        description: 'Model override (e.g., "anthropic/claude-sonnet-4-20250514")'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: evolve-e2e-tests
+  cancel-in-progress: true
+
+jobs:
+  evolve-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Check for existing evolution PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OPEN_PRS=$(gh pr list --label "e2e-evolution" --state open --json number --jq 'length')
+          if [ "$OPEN_PRS" -gt "0" ]; then
+            echo "has_open_pr=true" >> $GITHUB_OUTPUT
+            echo "An open evolution PR already exists. Skipping to avoid noise."
+            gh pr list --label "e2e-evolution" --state open --json number,title --jq '.[] | "  #\(.number): \(.title)"'
+          else
+            echo "has_open_pr=false" >> $GITHUB_OUTPUT
+            echo "No open evolution PRs found. Proceeding."
+          fi
+
+      - name: Close stale evolution PRs (older than 14 days)
+        if: steps.check-pr.outputs.has_open_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CUTOFF=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-14d +%Y-%m-%dT%H:%M:%SZ)
+          gh pr list --label "e2e-evolution" --state open --json number,createdAt --jq ".[] | select(.createdAt < \"$CUTOFF\") | .number" | while read PR_NUM; do
+            echo "Closing stale evolution PR #$PR_NUM"
+            gh pr close "$PR_NUM" --comment "Auto-closing: this evolution PR has been open for >14 days without merge. A fresh one will be generated on the next run."
+          done
+
+          OPEN_PRS=$(gh pr list --label "e2e-evolution" --state open --json number --jq 'length')
+          if [ "$OPEN_PRS" -eq "0" ]; then
+            echo "All stale PRs closed. Will proceed with evolution."
+            echo "has_open_pr=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install crush (opencode)
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        run: |
+          CRUSH_VERSION=$(gh api repos/charmbracelet/crush/releases/latest --jq '.tag_name' | tr -d 'v')
+          ASSET="crush_${CRUSH_VERSION}_Linux_x86_64.tar.gz"
+          URL=$(gh api repos/charmbracelet/crush/releases/latest --jq ".assets[] | select(.name == \"$ASSET\") | .browser_download_url")
+          echo "Installing crush v${CRUSH_VERSION}..."
+          curl -sL "$URL" -o /tmp/crush.tar.gz
+          tar xzf /tmp/crush.tar.gz -C /tmp/
+          sudo mv "/tmp/crush_${CRUSH_VERSION}_Linux_x86_64/crush" /usr/local/bin/crush
+          chmod +x /usr/local/bin/crush
+          crush --version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Ensure e2e-evolution label exists
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "e2e-evolution" \
+            --description "AI-generated e2e test improvements" \
+            --color "7057ff" \
+            2>/dev/null || true
+
+      - name: Generate crush config
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        run: |
+          cat > .crush.json << 'CRUSHEOF'
+          {
+            "providers": {
+              "zai": {
+                "id": "zai",
+                "name": "ZAI Provider",
+                "base_url": "https://api.z.ai/api/coding/paas/v4",
+                "api_key": "PLACEHOLDER"
+              }
+            },
+            "options": {
+              "context_paths": ["agents.md"]
+            }
+          }
+          CRUSHEOF
+
+          # Inject actual token (avoid shell expansion issues with heredoc)
+          sed -i "s/PLACEHOLDER/$ZAI_TOKEN/" .crush.json
+
+          echo "Crush config written:"
+          cat .crush.json
+        env:
+          ZAI_TOKEN: ${{ vars.ZAI_MODEL }}
+
+      - name: Build evolution prompt
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        id: prompt
+        run: |
+          FOCUS="${EVOLUTION_FOCUS:-}"
+
+          # Gather recent upstream changes for context
+          UPSTREAM_CONTEXT=""
+          for REPO in "provableHQ/snarkOS" "ProvableHQ/sdk"; do
+            SINCE=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-14d +%Y-%m-%dT%H:%M:%SZ)
+            COMMITS=$(gh api "repos/$REPO/commits?since=$SINCE&per_page=10" \
+              --jq '[.[] | "\(.sha[:8]) \(.commit.message | split("\n")[0])"] | join("\n")' 2>/dev/null || echo "(unavailable)")
+            UPSTREAM_CONTEXT="${UPSTREAM_CONTEXT}
+          Recent commits in ${REPO}:
+          ${COMMITS}
+          "
+          done
+
+          # Gather recent test results summary
+          TEST_RESULTS=""
+          if [ -f "compatibility/matrix.json" ]; then
+            TEST_RESULTS=$(jq -r '
+              .results[-5:][] |
+              "\(.result): snarkOS=\(.snarkos_version) SDK=\(.sdk_version) DPS=\(.dps_version) (\(.timestamp))"
+            ' compatibility/matrix.json 2>/dev/null || echo "(none)")
+          fi
+
+          # Build the prompt
+          PROMPT="You are evolving the e2e test suite for this integration test repository.
+
+          Your task: analyze the existing tests and make ONE high-impact improvement.
+          Only modify files under tests/. Do NOT touch .github/, scripts/, compatibility/, or docs/.
+
+          Context - recent upstream changes:
+          ${UPSTREAM_CONTEXT}
+
+          Context - recent test results:
+          ${TEST_RESULTS}
+
+          Rules:
+          1. Read all test files first (tests/integration/*/test.js, tests/setup/constants.js, tests/run-all-tests.js)
+          2. Read docs/EXTENDING_TESTS.md for conventions
+          3. Pick ONE improvement category:
+             a) New test suite for untested scenarios (error handling, edge cases, concurrent ops)
+             b) Strengthen existing test assertions
+             c) Add regression tests based on failure patterns
+          4. If creating a new suite, also update tests/run-all-tests.js (testSuites + suiteTimeouts)
+          5. Follow existing patterns exactly (node:test, ESM, same imports, same constants)
+          6. After making changes, run 'node --check' on every .js file you modified to verify syntax
+          7. Be conservative - one well-crafted change, not many small ones"
+
+          if [ -n "$FOCUS" ]; then
+            PROMPT="${PROMPT}
+
+          FOCUS AREA: ${FOCUS}
+          Prioritize improvements in this area."
+          fi
+
+          # Write prompt to file for crush to consume
+          echo "$PROMPT" > /tmp/evolve-prompt.txt
+          echo "Prompt written ($(wc -c < /tmp/evolve-prompt.txt) bytes)"
+        env:
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          EVOLUTION_FOCUS: ${{ inputs.focus_area || '' }}
+
+      - name: Run crush evolution
+        if: steps.check-pr.outputs.has_open_pr != 'true'
+        id: evolve
+        run: |
+          MODEL_FLAG="-m zai/glm-4.7"
+
+          echo "Running crush with model: $MODEL_FLAG"
+          echo "Working directory: $(pwd)"
+
+          # Run crush in non-interactive mode (run subcommand is headless by design)
+          PROMPT=$(cat /tmp/evolve-prompt.txt)
+          crush run $MODEL_FLAG -q "$PROMPT" 2>&1 | tee /tmp/crush-output.txt
+          CRUSH_EXIT=$?
+
+          echo "Crush exited with code: $CRUSH_EXIT"
+
+          # Check if any test files changed
+          if git diff --name-only -- tests/ | grep -q .; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            CHANGED_FILES=$(git diff --name-only -- tests/)
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+
+            # Extract a summary from changed files
+            SUMMARY="AI-evolved e2e tests ($(echo "$CHANGED_FILES" | wc -l) files changed)"
+            echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No test files were changed."
+          fi
+        env:
+          ZAI_TOKEN: ${{ vars.ZAI_MODEL }}
+
+      - name: Validate changes
+        if: steps.check-pr.outputs.has_open_pr != 'true' && steps.evolve.outputs.has_changes == 'true'
+        id: validate
+        run: |
+          ERRORS=0
+          for file in $(git diff --name-only -- tests/ | grep '\.js$'); do
+            if ! node --check "$file" 2>/dev/null; then
+              echo "Syntax error in: $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          for file in $(git diff --name-only -- tests/ | grep '\.json$'); do
+            if ! python3 -c "import json; json.load(open('$file'))" 2>/dev/null; then
+              echo "Invalid JSON: $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "valid=false" >> $GITHUB_OUTPUT
+            echo "$ERRORS validation errors found. Reverting."
+            git checkout -- tests/
+          else
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "All validations passed."
+          fi
+
+      - name: Create Pull Request
+        if: |
+          steps.check-pr.outputs.has_open_pr != 'true' &&
+          steps.evolve.outputs.has_changes == 'true' &&
+          steps.validate.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="evolve-e2e-tests/$(date +%Y%m%d-%H%M%S)"
+          SUMMARY="${{ steps.evolve.outputs.summary }}"
+
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git checkout -b "$BRANCH"
+          git add tests/
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "evolve(e2e): ${SUMMARY}"
+          git push -u origin "$BRANCH"
+
+          # Build PR body
+          CHANGED_FILES=$(git diff --name-only HEAD~1)
+          CRUSH_LOG=$(tail -100 /tmp/crush-output.txt 2>/dev/null || echo "(no log)")
+
+          PR_BODY="## E2E Test Evolution
+
+          ### Summary
+          ${SUMMARY}
+
+          ### Changed Files
+          $(echo "$CHANGED_FILES" | sed 's/^/- `/' | sed 's/$/`/')
+
+          ### Agent Log (last 100 lines)
+          <details>
+          <summary>Click to expand</summary>
+
+          \`\`\`
+          ${CRUSH_LOG}
+          \`\`\`
+          </details>
+
+          ### Metadata
+          - Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          - Agent: crush (opencode)
+          - Model: glm-4.7 (z.ai)
+
+          ---
+          *This PR was automatically generated by the e2e test evolution workflow using [crush](https://github.com/charmbracelet/crush). Please review carefully before merging.*"
+
+          echo "$PR_BODY" > /tmp/pr-body.md
+
+          gh pr create \
+            --title "evolve(e2e): ${SUMMARY}" \
+            --body-file /tmp/pr-body.md \
+            --label "e2e-evolution" \
+            --base "${{ github.ref_name }}"
+
+          echo "Evolution PR created on branch $BRANCH"
