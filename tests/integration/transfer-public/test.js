@@ -97,4 +97,45 @@ test('Public Transfer Tests', async (t) => {
             console.log(`  Recipient received: ${recipientFinalBalance - recipientInitialBalance} microcredits`);
         }
     });
+
+    await t.test('Reject transfer from account with insufficient public balance', async () => {
+        const unfundedAccount = new Account();
+        const unfundedAddress = unfundedAccount.address().to_string();
+
+        console.log(`  Unfunded account: ${unfundedAddress}`);
+
+        const keyProvider = new AleoKeyProvider();
+        keyProvider.useCache(true);
+        const recordProvider = new NetworkRecordProvider(unfundedAccount, networkClient);
+        const unfundedProgramManager = new ProgramManager(ENDPOINTS.DEVNET_API, keyProvider, recordProvider);
+        unfundedProgramManager.setAccount(unfundedAccount);
+
+        // Verify unfunded account has zero balance
+        const unfundedBalance = await networkClient.getPublicBalance(unfundedAddress);
+        assert.strictEqual(parseFloat(unfundedBalance), 0, 'Unfunded account should have zero balance');
+
+        // Attempt to transfer should fail
+        let buildError = null;
+        try {
+            await Promise.race([
+                unfundedProgramManager.buildTransferTransaction(
+                    TRANSFER_CONFIG.AMOUNT_CREDITS,
+                    recipientAccount.address().to_string(),
+                    'transfer_public',
+                    TRANSFER_CONFIG.FEE_CREDITS
+                ),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Build timeout')), TIMEOUTS.BUILD_TRANSFER)
+                )
+            ]);
+        } catch (error) {
+            buildError = error;
+        }
+
+        assert.ok(buildError, 'Transfer from unfunded account should fail');
+        const errorMsg = buildError.message.toLowerCase();
+        const hasBalanceError = errorMsg.includes('insufficient') || errorMsg.includes('balance') || errorMsg.includes('record');
+        assert.ok(hasBalanceError, `Error should reference insufficient balance: ${buildError.message}`);
+        console.log(`  Correctly rejected: ${buildError.message.split(':')[0]}`);
+    }, { timeout: TIMEOUTS.BUILD_TRANSFER + 5000 });
 });
