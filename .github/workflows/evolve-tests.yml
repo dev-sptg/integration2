@@ -111,9 +111,27 @@ jobs:
           python3 - <<'PY'
           import json, os
 
-          token = os.environ.get("ZAI_TOKEN")
-          if not token:
-            raise SystemExit("ZAI_TOKEN is required (set as a GitHub secret or variable).")
+          def looks_like_model(value: str) -> bool:
+            v = (value or "").strip()
+            if not v:
+              return False
+            # Common model formats: "zai/glm-4.7", "glm-4.7"
+            if "/" in v:
+              return True
+            if v.startswith("glm-") or v.startswith("zai/"):
+              return True
+            return False
+
+          token = (os.environ.get("ZAI_TOKEN") or "").strip()
+
+          # If the token was accidentally set to a model name (e.g. "glm-4.7"),
+          # fail early with a clear message.
+          if (not token) or looks_like_model(token):
+            raise SystemExit(
+              "ZAI_TOKEN is required. Set it as Actions secret/variable ZAI_TOKEN "
+              "(or ZAI_API_KEY). If you previously stored the token in ZAI_MODEL, "
+              "move it to ZAI_TOKEN."
+            )
 
           cfg = {
             "providers": {
@@ -135,7 +153,8 @@ jobs:
           print("Crush config written.")
           PY
         env:
-          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN || vars.ZAI_TOKEN }}
+          # Back-compat: older workflow stored the token in vars.ZAI_MODEL.
+          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN || secrets.ZAI_API_KEY || secrets.ZAI_KEY || secrets.ZAI_MODEL || vars.ZAI_TOKEN || vars.ZAI_API_KEY || vars.ZAI_KEY || vars.ZAI_MODEL }}
 
       - name: Build evolution prompt
         if: steps.check-pr.outputs.has_open_pr != 'true'
@@ -223,6 +242,13 @@ jobs:
           MODEL="${EVOLUTION_MODEL:-}"
           if [ -z "$MODEL" ]; then
             MODEL="zai/glm-4.7"
+          else
+            # Guard against misconfiguration where a token was stored in ZAI_MODEL
+            # (older workflow versions) and then reused as EVOLUTION_MODEL.
+            if [ "${#MODEL}" -ge 20 ] && [[ "$MODEL" != */* ]] && [[ "$MODEL" != glm-* ]] && [[ "$MODEL" != zai/* ]]; then
+              echo "EVOLUTION_MODEL looks token-like; using default model instead." >&2
+              MODEL="zai/glm-4.7"
+            fi
           fi
           if [[ "$MODEL" != */* ]]; then
             MODEL="zai/$MODEL"
@@ -256,7 +282,6 @@ jobs:
           fi
         env:
           EVOLUTION_MODEL: ${{ inputs.model != '' && inputs.model || vars.ZAI_MODEL }}
-          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN || vars.ZAI_TOKEN }}
 
       - name: Validate changes
         if: steps.check-pr.outputs.has_open_pr != 'true' && steps.evolve.outputs.has_changes == 'true'
