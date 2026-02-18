@@ -290,12 +290,7 @@ jobs:
           ERRORS=0
 
           # Enforce guardrails to keep test evolution manageable
-          python3 - <<'PY' || {
-            echo "valid=false" >> $GITHUB_OUTPUT
-            echo "Guardrails failed. Reverting."
-            git checkout -- tests/
-            exit 0
-          }
+          python3 - <<'PY' ||
           import subprocess
 
           def sh(cmd: str) -> str:
@@ -344,6 +339,12 @@ jobs:
 
           print(f"Guardrails OK: changed_files={num_changed}, added_lines={added}, new_suites={new_suite_pkgs}")
           PY
+          {
+            echo "valid=false" >> $GITHUB_OUTPUT
+            echo "Guardrails failed. Reverting."
+            git checkout -- tests/
+            exit 0
+          }
 
           for file in $(git diff --name-only -- tests/ | grep '\.js$'); do
             if ! node --check "$file" 2>/dev/null; then
@@ -428,6 +429,6 @@ jobs:
             --title "evolve(e2e): ${SUMMARY}" \
             --body-file /tmp/pr-body.md \
             --label "e2e-evolution" \
-            --base "${{ github.ref_name }}"
+            --base "${{ github.event.repository.default_branch || 'master' }}"
 
           echo "Evolution PR created on branch $BRANCH"
