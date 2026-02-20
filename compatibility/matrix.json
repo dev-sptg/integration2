@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-20T07:06:29Z",
+  "last_updated": "2026-02-20T07:20:58Z",
   "results": [
     {
       "snarkos_version": "bd86e5e0d1f1a93a89e5415b25d05110b2c95e3a",
@@ -3086,41 +3086,41 @@
       "snarkos_version": "testnet-v4.5.1",
       "sdk_version": "v0.9.16",
       "result": "fail",
-      "timestamp": "2026-02-20T07:01:43Z",
+      "timestamp": "2026-02-20T07:20:48Z",
       "tests": [
         {
           "name": "sdk-devnet",
           "status": "passed",
-          "duration": "77.38s",
+          "duration": "77.37s",
           "error": null,
           "subtests": [
             {
               "name": "SDK connects to devnet and queries block height",
               "status": "passed",
-              "duration": "36ms"
+              "duration": "35ms"
             },
             {
               "name": "Build and submit deployment transaction",
               "status": "passed",
-              "duration": "77.1s"
+              "duration": "76.9s"
             },
             {
               "name": "SDK Integration Tests",
               "status": "passed",
-              "duration": "77.1s"
+              "duration": "77.0s"
             }
           ]
         },
         {
           "name": "transfer-public",
           "status": "failed",
-          "duration": "141.29s",
+          "duration": "138.32s",
           "error": "Exit code: 1",
           "subtests": [
             {
               "name": "Build, submit, and verify transfer_public transaction",
               "status": "passed",
-              "duration": "74.5s"
+              "duration": "70.9s"
             },
             {
               "name": "Verify recipient received funds",
@@ -3130,19 +3130,19 @@
             {
               "name": "Reject transfer from account with insufficient public balance",
               "status": "failed",
-              "duration": "63.6s"
+              "duration": "64.1s"
             },
             {
               "name": "Public Transfer Tests",
               "status": "failed",
-              "duration": "141.1s"
+              "duration": "138.1s"
             }
           ]
         },
         {
           "name": "dps-devnet",
           "status": "passed",
-          "duration": "13.14s",
+          "duration": "13.13s",
           "error": null,
           "subtests": [
             {
