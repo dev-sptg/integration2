@@ -149,7 +149,7 @@ TARBALL_PATH="$SDK_BASE/$PACK_FILE"
 for testDir in "$INTEGRATION_ROOT/tests/integration"/*/; do
     if [ -f "$testDir/package.json" ]; then
         # Use relative path from test directory to SDK tarball
-        relPath=$(realpath --relative-to="$testDir" "$TARBALL_PATH" 2>/dev/null || echo "../../../sdk/$PACK_FILE")
+        relPath=$(realpath --relative-to="$testDir" "$TARBALL_PATH" 2>/dev/null || python3 -c "import os; print(os.path.relpath('$TARBALL_PATH', '$testDir'))" 2>/dev/null || echo "../../../local_build/sdk/$PACK_FILE")
         # Update package.json using node to handle JSON properly
         node -e "
             const fs = require('fs');
