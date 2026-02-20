@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-20T06:29:26Z",
+  "last_updated": "2026-02-20T07:01:53Z",
   "results": [
     {
       "snarkos_version": "bd86e5e0d1f1a93a89e5415b25d05110b2c95e3a",
@@ -3081,6 +3081,94 @@
         }
       ],
       "dps_version": "v0.19.1"
+    },
+    {
+      "snarkos_version": "testnet-v4.5.1",
+      "sdk_version": "v0.9.16",
+      "result": "fail",
+      "timestamp": "2026-02-20T07:01:43Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "77.38s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "36ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "77.1s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "77.1s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "failed",
+          "duration": "141.29s",
+          "error": "Exit code: 1",
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "74.5s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "failed",
+              "duration": "63.6s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "failed",
+              "duration": "141.1s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.14s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.21.0"
     }
   ]
 }

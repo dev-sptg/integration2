@@ -105,10 +105,23 @@ jobs:
           shared-key: dps-rust-${{ inputs.ref || 'default' }}
           save-if: true
 
+      - name: Configure git to use HTTPS with token for private dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.REPO_ACCESS_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://x-access-token:${{ secrets.REPO_ACCESS_TOKEN }}@github.com/".insteadOf "git@github.com:"
+
+      - name: Install system dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsodium-dev
+
       - name: Build DPS
         if: steps.binary-cache.outputs.cache-hit != 'true'
         env:
           CARGO_INCREMENTAL: 0
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
         run: |
           echo "🔨 Building DPS ${{ steps.version.outputs.version }}..."
           cd dps
