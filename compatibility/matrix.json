@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-02-20T08:12:37Z",
+  "last_updated": "2026-02-23T10:56:33Z",
   "results": [
     {
       "snarkos_version": "bd86e5e0d1f1a93a89e5415b25d05110b2c95e3a",
@@ -3083,6 +3083,94 @@
       "dps_version": "v0.19.1"
     },
     {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:56:03Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "78.19s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "77.9s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "77.9s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "137.12s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.2s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.6s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "136.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.16s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.8s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.0"
+    },
+    {
       "snarkos_version": "testnet-v4.5.0",
       "sdk_version": "v0.9.14",
       "result": "fail",
@@ -3340,6 +3428,94 @@
               "name": "DPS Delegated Proving Tests",
               "status": "passed",
               "duration": "13.0s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.0"
+    },
+    {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:54:52Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "77.67s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "77.2s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "77.2s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "136.80s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "69.8s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.8s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "136.6s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "11.10s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "10.9s"
             }
           ]
         }
@@ -3611,6 +3787,94 @@
       "dps_version": "v0.20.0"
     },
     {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.16",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:55:42Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "77.30s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "37ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "76.9s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "76.9s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "138.00s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "71.7s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.1s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "137.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.16s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.0"
+    },
+    {
       "snarkos_version": "testnet-v4.5.0",
       "sdk_version": "v0.9.16",
       "result": "fail",
@@ -3875,6 +4139,94 @@
       "dps_version": "v0.20.0"
     },
     {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:56:21Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "79.67s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "31ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "79.3s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.3s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "138.84s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "72.0s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.5s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "138.5s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.13s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.8s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.8s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.1"
+    },
+    {
       "snarkos_version": "testnet-v4.5.0",
       "sdk_version": "v0.9.14",
       "result": "fail",
@@ -4132,6 +4484,94 @@
               "name": "DPS Delegated Proving Tests",
               "status": "passed",
               "duration": "11.0s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.1"
+    },
+    {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:54:44Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "79.90s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "79.4s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "79.5s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "137.47s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "70.6s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.7s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "137.3s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "11.02s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.8s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "10.8s"
             }
           ]
         }
@@ -4403,6 +4843,94 @@
       "dps_version": "v0.20.1"
     },
     {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.16",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:55:43Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "75.77s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "32ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "75.5s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "75.5s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "130.00s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "67.0s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "59.7s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "129.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.23s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "7.0s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "13.0s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.20.1"
+    },
+    {
       "snarkos_version": "testnet-v4.5.0",
       "sdk_version": "v0.9.16",
       "result": "fail",
@@ -4665,6 +5193,94 @@
         }
       ],
       "dps_version": "v0.20.1"
+    },
+    {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.14",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:56:17Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "78.33s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "33ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "77.7s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "77.7s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "136.23s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "69.8s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.1s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "135.9s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "15.18s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "6.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "14.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.21.0"
     },
     {
       "snarkos_version": "testnet-v4.5.0",
@@ -4931,6 +5547,94 @@
       "dps_version": "v0.21.0"
     },
     {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.15",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:56:08Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "77.88s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "34ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "77.6s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "77.6s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "135.03s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "68.2s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.6s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "134.8s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.13s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.21.0"
+    },
+    {
       "snarkos_version": "testnet-v4.5.0",
       "sdk_version": "v0.9.15",
       "result": "fail",
@@ -5188,6 +5892,94 @@
               "name": "DPS Delegated Proving Tests",
               "status": "passed",
               "duration": "10.9s"
+            }
+          ]
+        }
+      ],
+      "dps_version": "v0.21.0"
+    },
+    {
+      "snarkos_version": "canary-v4.5.4",
+      "sdk_version": "v0.9.16",
+      "result": "pass",
+      "timestamp": "2026-02-23T10:55:55Z",
+      "tests": [
+        {
+          "name": "sdk-devnet",
+          "status": "passed",
+          "duration": "77.18s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "SDK connects to devnet and queries block height",
+              "status": "passed",
+              "duration": "37ms"
+            },
+            {
+              "name": "Build and submit deployment transaction",
+              "status": "passed",
+              "duration": "76.8s"
+            },
+            {
+              "name": "SDK Integration Tests",
+              "status": "passed",
+              "duration": "76.9s"
+            }
+          ]
+        },
+        {
+          "name": "transfer-public",
+          "status": "passed",
+          "duration": "139.84s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Build, submit, and verify transfer_public transaction",
+              "status": "passed",
+              "duration": "73.4s"
+            },
+            {
+              "name": "Verify recipient received funds",
+              "status": "passed",
+              "duration": "3.0s"
+            },
+            {
+              "name": "Reject transfer from account with insufficient public balance",
+              "status": "passed",
+              "duration": "63.2s"
+            },
+            {
+              "name": "Public Transfer Tests",
+              "status": "passed",
+              "duration": "139.6s"
+            }
+          ]
+        },
+        {
+          "name": "dps-devnet",
+          "status": "passed",
+          "duration": "13.14s",
+          "error": null,
+          "subtests": [
+            {
+              "name": "Execute delegated transfer_public via DPS",
+              "status": "passed",
+              "duration": "6.9s"
+            },
+            {
+              "name": "Wait for transaction confirmation",
+              "status": "passed",
+              "duration": "4.0s"
+            },
+            {
+              "name": "Verify balance changes after transfer",
+              "status": "passed",
+              "duration": "2.0s"
+            },
+            {
+              "name": "DPS Delegated Proving Tests",
+              "status": "passed",
+              "duration": "12.9s"
             }
           ]
         }
