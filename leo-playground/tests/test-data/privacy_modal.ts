@@ -1,8 +1,3 @@
-//import { ENV } from '../test-data/env';
-//import { url } from 'node:inspector';
-import baseURL from "../../playwright.config";
-//import { count } from 'node:console';
-
 export const privacyModalData = {
   title: "Privacy Policy & Terms of Use",
   content:
@@ -23,7 +18,7 @@ export const privacyModalData = {
 };
 
 export const privacyPageData = {
-  url: `${baseURL.use?.baseURL}/privacy_policy`,
+  url: `/privacy_policy`,
   //pg_url: baseURL,
   title: "Leo Playground",
   titleH1: "Provable Privacy Notice",
@@ -52,7 +47,7 @@ export const privacyPageData = {
 };
 
 export const termsPageData = {
-  url: `${baseURL.use?.baseURL}/terms_of_use`,
+  url: `/terms_of_use`,
   title: "Leo Playground",
   titleH1: "PROVABLE",
   titleH2: "Terms of Use",
