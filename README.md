@@ -11,6 +11,7 @@ Integration test framework for ProvableHQ's components. Tests snarkOS, SDK, and 
 | [Local Testing](docs/LOCAL_TESTING.md) | Step-by-step local setup and building |
 | [Integration Tests](docs/INTEGRATION_TESTS.md) | Test architecture, suites, and configuration |
 | [Extending Tests](docs/EXTENDING_TESTS.md) | How to add new test suites |
+| [Leo Playground Tests](docs/LEO_PLAYGROUND_TESTS.md) | Playwright E2E setup, run, CI, and troubleshooting |
 | [AI Agent Context](agents.md) | Technical details for AI agents |
 
 ## Quick Start
