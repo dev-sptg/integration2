@@ -23,7 +23,15 @@ jobs:
         run: yarn playwright install --with-deps
 
       - name: Run staging tests
-        run: yarn test:staging
+        run: yarn test:staging -- --retries=0 --trace=off
+
+      - name: Upload Playwright report (staging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-staging
+          path: playwright-report/
+          retention-days: 14
 
   test-production:
     name: Test Production
@@ -46,3 +54,11 @@ jobs:
 
       - name: Run production tests
         run: yarn test:production
+
+      - name: Upload Playwright report (production)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-production
+          path: playwright-report/
+          retention-days: 14

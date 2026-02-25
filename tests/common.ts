@@ -20,7 +20,7 @@ export const waitForPageReady = async (page: Page) => {
 
 export const waitForTerminalExecution = async (page: Page) => {
   const timeoutMs = Number(
-    process.env["PLAYWRIGHT_TERMINAL_TIMEOUT_MS"] ?? 45000
+    process.env["PLAYWRIGHT_TERMINAL_TIMEOUT_MS"] ?? 20000
   );
   const startTime = Date.now();
 
