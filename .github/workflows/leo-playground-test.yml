@@ -2,10 +2,16 @@ name: leo-playground-test
 
 on: workflow_dispatch
 
+env:
+  PROJECT_DIR: tests/leo-playground
+
 jobs:
   test-staging:
     name: Test Staging
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,6 +21,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -30,12 +37,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-staging
-          path: playwright-report/
+          path: ${{ env.PROJECT_DIR }}/playwright-report/
           retention-days: 14
 
   test-production:
     name: Test Production
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,6 +55,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -60,5 +71,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-production
-          path: playwright-report/
+          path: ${{ env.PROJECT_DIR }}/playwright-report/
           retention-days: 14

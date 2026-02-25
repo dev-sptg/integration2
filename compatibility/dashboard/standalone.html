@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On-Demand Compatibility Test Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a25;
+      --border: #2a2a3a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #8888a0;
+      --text-muted: #555566;
+      --accent-cyan: #00d4ff;
+      --accent-purple: #a855f7;
+      --accent-pink: #ec4899;
+      --pass: #10b981;
+      --pass-glow: rgba(16, 185, 129, 0.3);
+      --fail: #ef4444;
+      --fail-glow: rgba(239, 68, 68, 0.3);
+      --unknown: #6b7280;
+      --gradient-1: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      --gradient-2: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .background-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(10, 10, 15, 0.9), rgba(10, 10, 15, 0.95));
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .logo svg {
+      opacity: 0.9;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      font-weight: 300;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .metadata-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .metadata-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .metadata-item {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .metadata-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .metadata-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .metadata-value a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    .metadata-value a:hover {
+      text-decoration: underline;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value.pass { color: var(--pass); }
+    .stat-value.fail { color: var(--fail); }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .results-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .results-section h2 {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .results-list {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .history-entry {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-entry:last-child {
+      border-bottom: none;
+    }
+
+    .history-entry.expandable .history-item {
+      cursor: pointer;
+    }
+
+    .history-entry.expanded {
+      background: var(--bg-tertiary);
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      transition: background 0.15s;
+    }
+
+    .history-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .expand-icon {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+
+    .history-entry.expanded .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .test-details {
+      display: none;
+      padding: 0 1.5rem 1rem 2.5rem;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+    }
+
+    .test-details.expanded {
+      display: block;
+    }
+
+    .history-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .history-status.pass { background: var(--pass); box-shadow: 0 0 8px var(--pass-glow); }
+    .history-status.fail { background: var(--fail); box-shadow: 0 0 8px var(--fail-glow); }
+    .history-status.error { background: var(--unknown); }
+
+    .history-versions {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .history-versions span {
+      color: var(--text-secondary);
+      margin: 0 0.25rem;
+    }
+
+    .history-versions strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .history-result {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .history-result.pass {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--pass);
+    }
+
+    .history-result.fail {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--fail);
+    }
+
+    .history-result.error {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--unknown);
+    }
+
+    .history-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .test-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .test-icon {
+      font-size: 1rem;
+    }
+
+    .test-icon.pass { color: var(--pass); }
+    .test-icon.fail { color: var(--fail); }
+    .test-icon.skipped { color: var(--unknown); }
+
+    .test-name {
+      flex: 1;
+    }
+
+    .test-duration {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .test-error {
+      color: var(--fail);
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 4px;
+      word-break: break-word;
+    }
+
+    .test-suite {
+      margin-bottom: 1rem;
+    }
+
+    .test-suite:last-child {
+      margin-bottom: 0;
+    }
+
+    .suite-header {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .subtests {
+      margin-left: 1.5rem;
+      margin-top: 0.5rem;
+      border-left: 2px solid var(--border);
+      padding-left: 0.75rem;
+    }
+
+    .subtest-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .subtest-item .test-icon {
+      font-size: 0.85rem;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--accent-purple);
+    }
+
+    .copyright {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* Print styles */
+    @media print {
+      .background-grid {
+        display: none;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+      header, main, footer {
+        background: white;
+      }
+      .metadata-section, .stats-bar, .results-section {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 2rem 1rem 1.5rem;
+      }
+
+      main {
+        padding: 1rem;
+      }
+
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .history-item {
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem;
+      }
+
+      .history-result,
+      .history-time {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- EMBEDDED_DATA -->
+  <div class="background-grid"></div>
+
+  <header>
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2L2 9L16 16L30 9L16 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M2 23L16 30L30 23" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M2 16L16 23L30 16" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <span>Aleo Integration</span>
+    </div>
+    <h1>On-Demand Test Report</h1>
+    <p class="subtitle" id="report-id">Loading...</p>
+  </header>
+
+  <main>
+    <section class="metadata-section">
+      <h2>Test Configuration</h2>
+      <div class="metadata-grid" id="metadata-grid">
+        <!-- Metadata will be dynamically inserted here -->
+      </div>
+    </section>
+
+    <section class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="total-tests">-</span>
+        <span class="stat-label">Total Tests</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value pass" id="pass-count">-</span>
+        <span class="stat-label">Passing</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value fail" id="fail-count">-</span>
+        <span class="stat-label">Failing</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="test-time">-</span>
+        <span class="stat-label">Tested At</span>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <h2>Test Results</h2>
+      <div class="results-list" id="results-list">
+        <div class="loading">Loading results...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://aleo.org" target="_blank" rel="noopener">Aleo</a>
+    </p>
+    <p class="copyright">On-Demand Compatibility Test Report · Built with zero-knowledge</p>
+  </footer>
+
+  <script>
+    // Standalone dashboard logic
+    document.addEventListener('DOMContentLoaded', () => {
+      // Read embedded data from window global variable
+      if (!window.__REPORT_DATA) {
+        document.getElementById('results-list').innerHTML =
+          '<div class="loading">No data available</div>';
+        return;
+      }
+
+      try {
+        renderReport(window.__REPORT_DATA);
+      } catch (e) {
+        console.error('Failed to render report:', e);
+        document.getElementById('results-list').innerHTML =
+          '<div class="loading">Error loading data</div>';
+      }
+    });
+
+    function renderReport(data) {
+      // Update header
+      document.getElementById('report-id').textContent =
+        `Report ${data.report_id} · ${formatTimestamp(data.timestamp)}`;
+
+      // Render metadata
+      renderMetadata(data.metadata, data);
+
+      // Render stats
+      renderStats(data.results);
+
+      // Render results
+      renderResults(data.results);
+    }
+
+    function renderMetadata(metadata, data) {
+      const grid = document.getElementById('metadata-grid');
+      const items = [];
+
+      // Add report info
+      items.push({
+        label: 'Report ID',
+        value: data.report_id
+      });
+
+      items.push({
+        label: 'Timestamp',
+        value: formatTimestamp(data.timestamp)
+      });
+
+      // Add component metadata
+      if (metadata.snarkos) {
+        items.push({
+          label: 'snarkOS',
+          value: formatCommit(metadata.snarkos, 'provableHQ/snarkOS')
+        });
+      }
+
+      if (metadata.sdk) {
+        items.push({
+          label: 'SDK',
+          value: formatCommit(metadata.sdk, 'ProvableHQ/sdk')
+        });
+      }
+
+      if (metadata.dps) {
+        items.push({
+          label: 'DPS',
+          value: formatCommit(metadata.dps, 'provableHQ/delegated-proving-service')
+        });
+      }
+
+      grid.innerHTML = items.map(item => `
+        <div class="metadata-item">
+          <div class="metadata-label">${item.label}</div>
+          <div class="metadata-value">${item.value}</div>
+        </div>
+      `).join('');
+    }
+
+    function formatCommit(commit, repo) {
+      const shortSha = commit.sha.substring(0, 8);
+      const url = `https://github.com/${repo}/commit/${commit.sha}`;
+      const date = formatDate(commit.date);
+      return `<a href="${url}" target="_blank" rel="noopener">${shortSha}</a><br><span style="color: var(--text-secondary);">${date}</span>`;
+    }
+
+    function renderStats(results) {
+      if (!results || results.length === 0) {
+        document.getElementById('total-tests').textContent = '0';
+        document.getElementById('pass-count').textContent = '0';
+        document.getElementById('fail-count').textContent = '0';
+        document.getElementById('test-time').textContent = '-';
+        return;
+      }
+
+      const total = results.length;
+      const pass = results.filter(r => r.result === 'pass').length;
+      const fail = results.filter(r => r.result === 'fail').length;
+
+      document.getElementById('total-tests').textContent = total;
+      document.getElementById('pass-count').textContent = pass;
+      document.getElementById('fail-count').textContent = fail;
+
+      const timestamp = results[0]?.timestamp;
+      if (timestamp) {
+        document.getElementById('test-time').textContent = formatDate(timestamp);
+      }
+    }
+
+    function renderResults(results) {
+      const container = document.getElementById('results-list');
+
+      if (!results || results.length === 0) {
+        container.innerHTML = '<div class="loading">No test results available</div>';
+        return;
+      }
+
+      container.innerHTML = results.map((result, index) => {
+        const componentBadges = [];
+        if (result.snarkos_version) {
+          componentBadges.push(`snarkOS <strong>${result.snarkos_version.substring(0, 8)}</strong>`);
+        }
+        if (result.sdk_version) {
+          componentBadges.push(`SDK <strong>${result.sdk_version.substring(0, 8)}</strong>`);
+        }
+        if (result.dps_version) {
+          componentBadges.push(`DPS <strong>${result.dps_version.substring(0, 8)}</strong>`);
+        }
+
+        const tests = result.tests || [];
+        const hasTests = tests.length > 0;
+        const testsHtml = hasTests ? renderTestDetails(tests) : '';
+
+        return `
+          <div class="history-entry ${hasTests ? 'expandable' : ''}" data-index="${index}">
+            <div class="history-item" ${hasTests ? `onclick="toggleTestDetails(${index})"` : ''}>
+              <div class="history-status ${result.result}"></div>
+              <div class="history-versions">
+                ${componentBadges.join('<span> × </span>')}
+              </div>
+              <div class="history-result ${result.result}">${result.result}</div>
+              <div class="history-time">${formatDate(result.timestamp)}</div>
+              ${hasTests ? '<div class="expand-icon">▼</div>' : ''}
+            </div>
+            ${hasTests ? `<div class="test-details" id="details-${index}">${testsHtml}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTestDetails(tests) {
+      return tests.map(test => {
+        const statusIcon = test.status === 'passed' ? '✓' : test.status === 'failed' ? '✗' : '○';
+        const statusClass = test.status === 'passed' ? 'pass' : test.status === 'failed' ? 'fail' : 'skipped';
+
+        const subtests = test.subtests || [];
+        const subtestsHtml = subtests.length > 0 ? `
+          <div class="subtests">
+            ${subtests.map(sub => {
+              const subIcon = sub.status === 'passed' ? '✓' : sub.status === 'failed' ? '✗' : '○';
+              const subClass = sub.status === 'passed' ? 'pass' : sub.status === 'failed' ? 'fail' : 'skipped';
+              return `
+                <div class="subtest-item">
+                  <span class="test-icon ${subClass}">${subIcon}</span>
+                  <span class="test-name">${sub.name}</span>
+                  <span class="test-duration">${sub.duration || ''}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '';
+
+        return `
+          <div class="test-suite">
+            <div class="test-item suite-header">
+              <span class="test-icon ${statusClass}">${statusIcon}</span>
+              <span class="test-name"><strong>${test.name}</strong></span>
+              <span class="test-duration">${test.duration || ''}</span>
+            </div>
+            ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+            ${subtestsHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleTestDetails(index) {
+      const details = document.getElementById(`details-${index}`);
+      const entry = details.closest('.history-entry');
+
+      if (details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        entry.classList.remove('expanded');
+      } else {
+        details.classList.add('expanded');
+        entry.classList.add('expanded');
+      }
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return 'Unknown';
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatTimestamp(timestamp) {
+      if (!timestamp) return 'Unknown';
+      const date = new Date(timestamp);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  </script>
+</body>
+</html>

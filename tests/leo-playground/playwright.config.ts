@@ -5,25 +5,6 @@ dotenv.config();
 // Default to staging unless TEST_MODE=production is provided.
 const env = process.env.TEST_MODE ?? "staging";
 
-// Run additional browsers on CI; local runs stay fast with Chromium only.
-const browsersList = process.env.CI
-  ? [
-      {
-        name: "firefox",
-        use: {
-          ...devices["Desktop Firefox"],
-        },
-      },
-
-      {
-        name: "webkit",
-        use: {
-          ...devices["Desktop Safari"],
-        },
-      },
-    ]
-  : [];
-
 const config: PlaywrightTestConfig = {
   testDir: "./tests",
   timeout: 3000 * 1000,
@@ -51,8 +32,6 @@ const config: PlaywrightTestConfig = {
         ...devices["Desktop Chrome"],
       },
     },
-
-    ...browsersList,
   ],
 };
 

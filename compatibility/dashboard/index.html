@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aleo Compatibility Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background-grid"></div>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  
+  <header>
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2L2 9L16 16L30 9L16 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M2 23L16 30L30 23" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M2 16L16 23L30 16" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <span>Aleo Integration</span>
+    </div>
+    <h1>Compatibility Matrix</h1>
+    <p class="subtitle">Loading component compatibility...</p>
+  </header>
+
+  <main>
+    <section class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="total-tests">-</span>
+        <span class="stat-label">Total Tests</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value pass" id="pass-count">-</span>
+        <span class="stat-label">Passing</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value fail" id="fail-count">-</span>
+        <span class="stat-label">Failing</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="last-updated">-</span>
+        <span class="stat-label">Last Updated</span>
+      </div>
+    </section>
+
+    <section id="matrices-container">
+      <!-- Matrices will be dynamically inserted here -->
+    </section>
+
+    <section class="history-section">
+      <h2>Recent Test Results</h2>
+      <div class="history-list" id="history-list">
+        <div class="loading">Loading results...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer-links">
+    <p>
+      <a href="https://aleo.org" target="_blank" rel="noopener">Aleo</a>
+    </p>
+    <p class="copyright">Built with zero-knowledge</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

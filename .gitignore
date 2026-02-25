@@ -1,15 +1,51 @@
-# Dependencies
+logs/
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Act and Docker
+.act/
+.actrc.local
+
+# Test artifacts
+test-results/
+coverage/
+*.log
+
+# Cloned repositories (if testing locally)
+snarkOS/
+sdk/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if any local scripts)
 node_modules/
+
+# Rust build artifacts (if any local Rust code)
+target/
+Cargo.lock
 
 # Environment files
 .env
-.env.*
+.env.local
 
-# Test artifacts
-playwright-report/
-test-results/
+local_build/
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Dashboard build artifacts
+compatibility/dashboard-dist/
+
+*.ledger-*
+
+*.current-proposal-*
+*.node-data-*
+
+# Crush / evolution workflow
+.crush/
+.crush.json
