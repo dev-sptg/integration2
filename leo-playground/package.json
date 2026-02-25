@@ -1,0 +1,16 @@
+{
+  "name": "leo-playground-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test:production": "cross-env TEST_MODE=production playwright test",
+    "test:staging": "cross-env TEST_MODE=staging playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.1",
+    "@types/node": "^25.2.3",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,8 +1,7 @@
 import { Page, expect } from "@playwright/test";
-import type { Terminal } from "xterm";
 
 export const waitForPageReady = async (page: Page) => {
-  await page.goto("http://localhost:3000/");
+  await page.goto("/");
 
   // Listen for all console logs
   //   page.on("console", (msg) => console.log(msg.text())); // For dev debug
@@ -42,7 +41,7 @@ export const waitForTerminalExecution = async (page: Page) => {
       const status = await page.evaluate(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        const terminal: Terminal | undefined = window.playgroundTerminal;
+        const terminal = window.playgroundTerminal;
         if (!terminal) {
           return "pending";
         }
