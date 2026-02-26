@@ -45,18 +45,7 @@ yarn install --frozen-lockfile
 From `tests/leo-playground`:
 
 ```bash
-# staging
-TEST_MODE=staging yarn playwright test
-
-# production
-TEST_MODE=production yarn playwright test
-```
-
-Or via scripts:
-
-```bash
-yarn test:staging
-yarn test:production
+yarn test
 ```
 
 ## Configuration
@@ -115,5 +104,5 @@ If needed, increase timeout:
 
 ```bash
 cd tests/leo-playground
-PLAYWRIGHT_TERMINAL_TIMEOUT_MS=30000 yarn test:staging
+PLAYWRIGHT_TERMINAL_TIMEOUT_MS=30000 yarn test
 ```

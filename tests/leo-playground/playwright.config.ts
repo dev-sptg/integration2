@@ -2,8 +2,6 @@ import { devices, PlaywrightTestConfig } from "@playwright/test";
 import dotenv from "dotenv";
 
 dotenv.config();
-// Default to staging unless TEST_MODE=production is provided.
-const env = process.env.TEST_MODE ?? "staging";
 
 const config: PlaywrightTestConfig = {
   testDir: "./tests",
@@ -18,11 +16,7 @@ const config: PlaywrightTestConfig = {
   reporter: "html",
   use: {
     actionTimeout: 0,
-    baseURL:
-      env === "production"
-        ? "https://play.leo-lang.org"
-        : "https://stage-pg.leo-lang.org",
-    trace: "on-first-retry",
+    baseURL: "http://localhost:3000",
   },
 
   projects: [
@@ -33,6 +27,12 @@ const config: PlaywrightTestConfig = {
       },
     },
   ],
+   webServer: {
+    command: `docker run -p 3000:3000 leo-web-playground`,
+    url: "http://localhost:3000/",
+    reuseExistingServer: true,
+    ignoreHTTPSErrors: true,
+  },
 };
 
 export default config;

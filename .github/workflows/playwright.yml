@@ -1,0 +1,78 @@
+name: Playwright Tests
+on:
+  workflow_dispatch:
+    inputs:
+      use_latest_leo_compiler:
+        description: Use Latest Version of Leo Compiler
+        required: true
+        default: true
+        type: boolean
+      leo_compiler_version_tag:
+        description: Leo Compiler Version (tag)
+        required: false
+        default: ""
+        type: string
+      
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.PLAYGROUND_PERSONAL_ACCESS_TOKEN || github.token }}
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PLAYGROUND_PERSONAL_ACCESS_TOKEN || github.token }}
+          submodules: recursive
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          always-auth: true
+          cache: yarn
+          cache-dependency-path: |
+            tests/leo-playground/yarn.lock
+            tests/leo-playground/leo-lsp/yarn.lock
+      - name: Configure GitHub Packages auth
+        working-directory: tests/leo-playground/leo-lsp
+        shell: bash
+        run: |
+          echo "@provablehq:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+      - name: Install dependencies
+        working-directory: tests/leo-playground/leo-lsp
+        run: yarn install --frozen-lockfile
+      - name: Build LSP features
+        working-directory: tests/leo-playground/leo-lsp
+        run: yarn build:features
+      - name: Build resource
+        working-directory: tests/leo-playground/leo-lsp
+        run: yarn web-playground build:release:production
+      - name: Build image
+        working-directory: tests/leo-playground/leo-lsp
+        shell: bash
+        run: |
+          if [ "${{ inputs.use_latest_leo_compiler }}" = "false" ] && [ -n "${{ inputs.leo_compiler_version_tag }}" ]; then
+            yarn web-playground build:docker:origin --build-arg compiler_version=tags/${{ inputs.leo_compiler_version_tag }}
+          else
+            yarn web-playground build:docker:origin
+          fi
+      - name: Install Playwright test dependencies
+        working-directory: tests/leo-playground
+        run: yarn install --frozen-lockfile
+      - name: Install Playwright Browsers
+        working-directory: tests/leo-playground
+        run: yarn playwright install --with-deps
+      - name: Run Playwright tests
+        working-directory: tests/leo-playground
+        run: yarn test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/leo-playground/playwright-report/
+          retention-days: 30

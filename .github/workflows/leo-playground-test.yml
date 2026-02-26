@@ -30,7 +30,7 @@ jobs:
         run: yarn playwright install --with-deps
 
       - name: Run staging tests
-        run: yarn test:staging -- --retries=0 --trace=off
+        run: yarn test -- --retries=0 --trace=off
 
       - name: Upload Playwright report (staging)
         if: always()
@@ -64,7 +64,7 @@ jobs:
         run: yarn playwright install --with-deps
 
       - name: Run production tests
-        run: yarn test:production
+        run: yarn test
 
       - name: Upload Playwright report (production)
         if: always()
